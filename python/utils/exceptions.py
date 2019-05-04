@@ -1,3 +1,8 @@
+### Exception handling utilities
+## DEPENDENCIES:
+# OS: 
+# Python: 
+
 import sys
 import traceback
 

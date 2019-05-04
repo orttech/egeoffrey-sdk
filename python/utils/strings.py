@@ -1,3 +1,8 @@
+### Strings utilities
+## DEPENDENCIES:
+# OS: 
+# Python: 
+
 # truncate a long string 
 def truncate(string, max_len=50):
     if string is None: string = ""

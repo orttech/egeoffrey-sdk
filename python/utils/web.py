@@ -1,3 +1,8 @@
+### Web requests utilities
+## DEPENDENCIES:
+# OS: 
+# Python: 
+
 import requests
 
 # request a given url

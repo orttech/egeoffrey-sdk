@@ -116,15 +116,29 @@ class Module {
     }
     
     // ensure all the items of the array of settings are included in the configuration object provided
-    is_valid_configuration(settings, configuration) {
-        if (configuration.constructor != Object) return false
+    __is_valid_configuration(settings, configuration, unconfigure_if_fails=true) {
+        if (configuration.constructor != Object) {
+            if (unconfigure_if_fails) this.configured = false
+            return false
+        }
         for (var item of settings) {
             if (! (item in configuration) || configuration[item] == null) { 
                 this.log_warning("Invalid configuration received, "+item+" missing in "+JSON.stringify(configuration))
+                if (unconfigure_if_fails) this.configured = false
                 return false
             }
         }
         return true
+    }
+    
+    // ensure the configuration provided contains all the required settings, if not, unconfigure the module
+    is_valid_module_configuration(settings, configuration) {
+        return this.__is_valid_configuration(settings, configuration, true)
+    }
+
+    // ensure the configuration provided contains all the required settings
+    is_valid_configuration(settings, configuration) {
+        return this.__is_valid_configuration(settings, configuration, false)
     }
     
     // run the module, called when starting the thread

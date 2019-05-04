@@ -1,4 +1,9 @@
-import numpy
+### Number utilities
+## DEPENDENCIES:
+# OS: 
+# Python: tinynumpy
+
+from tinynumpy import tinynumpy
 import random
 import __builtin__
 
@@ -57,7 +62,8 @@ def velocity(in_x,in_y):
         max = x[len(x)-1]
         for i in range(0,len(x)): x[i] = float(x[i]-min)/float(max-min)
         # apply linear regression to interpolate the data
-        z = numpy.polyfit(x,y,1)
+        # TODO: numpy alternative
+        #z = numpy.polyfit(x,y,1)
         # return the coefficient
         return normalize(z[0],"float_2")
     else: return None
@@ -66,7 +72,7 @@ def velocity(in_x,in_y):
 def avg(data):
     data = remove_all(data,[None,""])
     if len(data) > 0:
-        if is_number(data[0]): return normalize(numpy.mean(data))
+        if is_number(data[0]): return normalize(tinynumpy.array(data).mean())
         else: return __builtin__.max(set(data), key=data.count)
     else: return None
 
@@ -74,7 +80,7 @@ def avg(data):
 def sum(data):
         data = remove_all(data,[None,""])
         if len(data) > 0:
-                if is_number(data[0]): return normalize(numpy.sum(data))
+                if is_number(data[0]): return normalize(tinynumpy.array(data).sum())
                 else: return 0
         else: return 0
 

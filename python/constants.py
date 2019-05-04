@@ -1,3 +1,7 @@
+### Global constants
+## DEPENDENCIES:
+# OS: 
+# Python: 
 
 # myHouse version
 VERSION = "3.0"

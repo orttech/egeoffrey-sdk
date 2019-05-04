@@ -1,3 +1,8 @@
+### Run OS commands
+## DEPENDENCIES:
+# OS: 
+# Python: 
+
 import Queue
 import os
 import threading

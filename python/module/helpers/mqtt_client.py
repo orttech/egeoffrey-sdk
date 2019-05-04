@@ -5,9 +5,9 @@ import json
 import paho.mqtt.client as mqtt
 import ssl
 
-import sdk.utils.constants as constants
+import sdk.constants as constants
 import sdk.utils.exceptions as exception
-from sdk.message import Message
+from sdk.module.helpers.message import Message
 
 class Mqtt_client():
     def __init__(self, module):

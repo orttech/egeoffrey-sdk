@@ -1,10 +1,14 @@
+### Representation of a message to be sent to the bus
+## DEPENDENCIES:
+# OS:
+# Python: 
+
 import json
 import random
 import copy
 
-import sdk.utils.constants as constants
+import sdk.constants as constants
 
-# representation of a message to be sent to the bus
 class Message():
     def __init__(self, module=None):
         self.reset()

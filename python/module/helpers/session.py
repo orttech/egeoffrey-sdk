@@ -1,4 +1,8 @@
-# sessions for keeping track of requests
+### sessions for keeping track of requests
+## DEPENDENCIES:
+# OS: 
+# Python: 
+
 class Session():
     def __init__(self, module):
         self.__module = module

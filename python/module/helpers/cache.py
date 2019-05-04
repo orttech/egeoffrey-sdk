@@ -1,6 +1,10 @@
+### In memory cache helper class
+## DEPENDENCIES:
+# OS:
+# Python: 
+
 import time
 
-# in memory cache helper class
 class Cache():
     def __init__(self):
         self.__cache = {}

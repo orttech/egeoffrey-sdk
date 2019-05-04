@@ -1,17 +1,20 @@
+### Module class from which all the components inherits common functionalities
+## DEPENDENCIES:
+# OS:
+# Python: 
+
 import threading
 import os
 import time
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 
-from sdk.message import Message
-from sdk.mqtt_client import Mqtt_client
-from sdk.cache import Cache
-from sdk.session import Session
+from sdk.module.helpers.message import Message
+from sdk.module.helpers.mqtt_client import Mqtt_client
+from sdk.module.helpers.session import Session
 import sdk.utils.exceptions as exception
-import sdk.utils.constants as constants
+import sdk.constants as constants
 
-# Module class from which all the components inherits common functionalities
 class Module(threading.Thread):
     # used for enforcing abstract methods
     __metaclass__ = ABCMeta 
@@ -51,8 +54,6 @@ class Module(threading.Thread):
         self.stopping = False
         # initialize mqtt client for connecting to the bus
         self.__mqtt = Mqtt_client(self)
-        # initialize internal cache
-        self.cache = Cache() 
         # initialize session manager
         self.sessions = Session(self)
         # call module implementation of init
@@ -125,13 +126,24 @@ class Module(threading.Thread):
         self.__log("error", text)
         
     # ensure all the items of an array of settings are included in the configuration object provided
-    def is_valid_configuration(self, settings, configuration):
-        if not isinstance(configuration, dict): return False
+    def __is_valid_configuration(self, settings, configuration, unconfigure_if_fails):
+        if not isinstance(configuration, dict): 
+            if unconfigure_if_fails: self.configured = False
+            return False
         for item in settings:
             if not item in configuration or configuration[item] is None: 
                 self.log_warning("Invalid configuration received, "+item+" missing in "+str(configuration))
+                if unconfigure_if_fails: self.configured = False
                 return False
         return True
+
+    # ensure the configuration provided contains all the required settings, if not, unconfigure the module
+    def is_valid_module_configuration(self, settings, configuration):
+        return self.__is_valid_configuration(settings, configuration, True)
+
+    # ensure the configuration provided contains all the required settings
+    def is_valid_configuration(self, settings, configuration):
+        return self.__is_valid_configuration(settings, configuration, False)
         
     # run the module, called when starting the thread
     def run(self):

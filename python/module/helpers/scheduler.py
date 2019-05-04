@@ -1,3 +1,8 @@
+### job scheduler
+## DEPENDENCIES:
+# OS: 
+# Python: APScheduler
+
 import logging
 import apscheduler
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -16,7 +21,6 @@ class MQTTLogHandler(logging.StreamHandler):
         if record.levelname.lower() == "error": self.__module.log_error(self.format(record))
         if record.levelname.lower() == "critical": self.__module.log_error(self.format(record))
 
-# job scheduler
 class Scheduler():
     def __init__(self, module):
         self.__module = module
