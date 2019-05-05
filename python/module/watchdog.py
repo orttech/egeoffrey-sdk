@@ -46,7 +46,6 @@ class Watchdog(Module):
         input = input.replace(" ","")
         input = input.replace("\t","")
         list = input.split(",")
-        print "MYHOUSE_MODULES: "+str(list)
         # MYHOUSE_MODULESS format: package1/file1[=alias1],package2/file2[=alias2] etc.
         for entry in list: 
             # keep track of the alias if provided (package/file=alias)

@@ -32,7 +32,7 @@ class Module(threading.Thread):
         self.version = constants.VERSION
         self.build = ""
         # gateway settings
-        self.gateway_hostname = os.getenv("MYHOUSE_GATEWAY_HOSTNAME", "localhost")
+        self.gateway_hostname = os.getenv("MYHOUSE_GATEWAY_HOSTNAME", "myhouse-gateway")
         self.gateway_port = int(os.getenv("MYHOUSE_GATEWAY_PORT", 443))
         self.gateway_transport = os.getenv("MYHOUSE_GATEWAY_TRANSPORT", "websockets")
         self.gateway_ssl = bool(int(os.getenv("MYHOUSE_GATEWAY_SSL", False)))
