@@ -108,7 +108,7 @@ class Mqtt_client {
                 // parse the incoming request into a message data structure
                 var message = new Message()
                 message.parse(msg.destinationName, msg.payloadString)
-                if (this_class.__module.verbose) this_class.__module.log_debug("Received message "+message.dump())
+                if (this_class.__module.verbose) this_class.__module.log_debug("Received message "+message.dump(), false)
             } catch (e) {
                 this_class.__module.log_error("Invalid message received on "+msg.destinationName+" - "+msg.payloadString+": "+get_exception(e))
                 return

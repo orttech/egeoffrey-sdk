@@ -102,7 +102,7 @@ class Watchdog(Module):
     def stop_module(self, entry):
         if not entry["started"]: return
         try:
-            self.threads[entry["fullname"]].join()        
+            self.threads[entry["fullname"]].join()
         except Exception,e:
             print "Error while stopping module "+entry["fullname"]+": "+exception.get(e)
         entry["started"] = False

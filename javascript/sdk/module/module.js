@@ -19,7 +19,7 @@ class Module {
         this.house_passcode = "MYHOUSE_PASSCODE" in window ? window.MYHOUSE_PASSCODE : ""
         // debug
         this.debug = "MYHOUSE_DEBUG" in window ? Boolean(window.MYHOUSE_DEBUG) : 0
-        this.verbose = true
+        this.verbose = "MYHOUSE_VERBOSE" in window ? Boolean(window.MYHOUSE_VERBOSE) : 0
         // logging
         this.logging_remote = "MYHOUSE_LOGGING_REMOTE" in window ? Boolean(window.MYHOUSE_LOGGING_REMOTE) : false
         this.logging_local = "MYHOUSE_LOGGING_LOCAL" in window ? Boolean(window.MYHOUSE_LOGGING_LOCAL) : true
@@ -67,10 +67,10 @@ class Module {
         
     // send a message to another module
     send(message) {
-        if (this.verbose) this.log_debug("Publishing message "+message.dump())
+        if (this.verbose) this.log_debug("Publishing message "+message.dump(), false)
         // ensure message is valid
         if (message.sender == "" || message.recipient == "") {
-            this.log_warning("invalid message to send")
+            this.log_warning("invalid message to send", false)
             return 
         }
         // publish it to the message bus
@@ -81,9 +81,9 @@ class Module {
     }
 
     // log a message
-    __log(level, text) {
+    __log(level, text, allow_remote_logging) {
         if (this.logging_local) console.log("["+this.house_id+"]["+this.fullname+"] "+level.toUpperCase()+": "+text)
-        if (this.logging_remote) {
+        if (this.logging_remote && allow_remote_logging) {
             // send the message to the logger module
             message = Message(this)
             message.recipient = "controller/logger"
@@ -95,36 +95,32 @@ class Module {
     }
 
     // handle debug logs
-    log_debug(text) {
+    log_debug(text, allow_remote_logging=true) {
         if (this.debug == 0) return
-        this.__log("debug", text)
+        this.__log("debug", text, allow_remote_logging)
     }
     
     // handle info logs
-    log_info(text) {
-        this.__log("info", text)
+    log_info(text, allow_remote_logging=true) {
+        this.__log("info", text, allow_remote_logging)
     }        
 
     // handle warning logs
-    log_warning(text) {
-        this.__log("warning", text)
+    log_warning(text, allow_remote_logging=true) {
+        this.__log("warning", text, allow_remote_logging)
     }
     
     // handle error logs
-    log_error(text) {
-        this.__log("error", text)
+    log_error(text, allow_remote_logging=true) {
+        this.__log("error", text, allow_remote_logging)
     }
     
     // ensure all the items of the array of settings are included in the configuration object provided
-    __is_valid_configuration(settings, configuration, unconfigure_if_fails=true) {
-        if (configuration.constructor != Object) {
-            if (unconfigure_if_fails) this.configured = false
-            return false
-        }
+    __is_valid_configuration(settings, configuration) {
+        if (configuration.constructor != Object) return false
         for (var item of settings) {
             if (! (item in configuration) || configuration[item] == null) { 
                 this.log_warning("Invalid configuration received, "+item+" missing in "+JSON.stringify(configuration))
-                if (unconfigure_if_fails) this.configured = false
                 return false
             }
         }
@@ -133,12 +129,12 @@ class Module {
     
     // ensure the configuration provided contains all the required settings, if not, unconfigure the module
     is_valid_module_configuration(settings, configuration) {
-        return this.__is_valid_configuration(settings, configuration, true)
+        return this.__is_valid_configuration(settings, configuration)
     }
 
     // ensure the configuration provided contains all the required settings
     is_valid_configuration(settings, configuration) {
-        return this.__is_valid_configuration(settings, configuration, false)
+        return this.__is_valid_configuration(settings, configuration)
     }
     
     // run the module, called when starting the thread

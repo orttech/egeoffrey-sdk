@@ -44,7 +44,7 @@ class Module(threading.Thread):
         self.house_passcode = os.getenv("MYHOUSE_PASSCODE", "")
         # debug
         self.debug = bool(int(os.getenv("MYHOUSE_DEBUG", False)))
-        self.verbose = False
+        self.verbose = bool(int(os.getenv("MYHOUSE_VERBOSE", False)))
         # logging
         self.logging_remote = bool(int(os.getenv("MYHOUSE_LOGGING_REMOTE", True)))
         self.logging_local = bool(int(os.getenv("MYHOUSE_LOGGING_LOCAL", True)))
@@ -85,10 +85,10 @@ class Module(threading.Thread):
         
     # send a message to another module
     def send(self, message):
-        if self.verbose: self.log_debug("Publishing message "+message.dump())
+        if self.verbose: self.log_debug("Publishing message "+message.dump(), False)
         # ensure message is valid
         if message.sender == "" or message.recipient == "": 
-            self.log_warning("invalid message to send")
+            self.log_warning("invalid message to send", False)
             return
         # publish it to the message bus
         if message.is_null: payload = None 
@@ -96,10 +96,13 @@ class Module(threading.Thread):
         self.__mqtt.publish(message.recipient, message.command, message.args, payload, message.retain)
         
     # log a message
-    def __log(self, level, text):
+    def __log(self, level, text, allow_remote_logging):
         if self.logging_local:
-            print "["+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"]["+self.house_id+"]["+str(self.fullname)+"] "+str(level.upper()) + ": "+str(text)
-        if self.logging_remote:
+            severity = str(level.upper())
+            if severity == "WARNING": severity = "\033[93mWARNING\033[0m"
+            elif severity == "ERROR": severity = "\033[91mERROR\033[0m"
+            print "["+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"]["+self.house_id+"]["+str(self.fullname)+"] "+severity+ ": "+str(text)
+        if self.logging_remote and allow_remote_logging:
             # send the message to the logger module
             message = Message(self)
             message.recipient = "controller/logger"
@@ -109,41 +112,38 @@ class Module(threading.Thread):
             self.send(message)
 
     # handle debug logs
-    def log_debug(self, text):
+    def log_debug(self, text, allow_remote_logging=True):
         if not self.debug: return
-        self.__log("debug", text)
+        self.__log("debug", text, allow_remote_logging)
     
     # handle info logs
-    def log_info(self, text):
-        self.__log("info", text)
+    def log_info(self, text, allow_remote_logging=True):
+        self.__log("info", text, allow_remote_logging)
     
     # handle warning logs
-    def log_warning(self, text):
-        self.__log("warning", text)
+    def log_warning(self, text, allow_remote_logging=True):
+        self.__log("warning", text, allow_remote_logging)
     
     # handle error logs
-    def log_error(self, text):
-        self.__log("error", text)
+    def log_error(self, text, allow_remote_logging=True):
+        self.__log("error", text, allow_remote_logging)
         
     # ensure all the items of an array of settings are included in the configuration object provided
-    def __is_valid_configuration(self, settings, configuration, unconfigure_if_fails):
-        if not isinstance(configuration, dict): 
-            if unconfigure_if_fails: self.configured = False
-            return False
+    def __is_valid_configuration(self, settings, configuration):
+        if not isinstance(configuration, dict): return False
         for item in settings:
             if not item in configuration or configuration[item] is None: 
                 self.log_warning("Invalid configuration received, "+item+" missing in "+str(configuration))
-                if unconfigure_if_fails: self.configured = False
                 return False
         return True
 
     # ensure the configuration provided contains all the required settings, if not, unconfigure the module
     def is_valid_module_configuration(self, settings, configuration):
-        return self.__is_valid_configuration(settings, configuration, True)
+        return self.__is_valid_configuration(settings, configuration)
 
     # ensure the configuration provided contains all the required settings
     def is_valid_configuration(self, settings, configuration):
-        return self.__is_valid_configuration(settings, configuration, False)
+        return self.__is_valid_configuration(settings, configuration)
         
     # run the module, called when starting the thread
     def run(self):

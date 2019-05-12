@@ -1,0 +1,18 @@
+### MYHOUSE ###
+
+### define base image
+ARG ARCHITECTURE
+FROM $ARCHITECTURE/python:2.7-alpine
+
+### define workdir
+ENV WORKDIR=/myHouse 
+WORKDIR $WORKDIR
+
+### install myHouse SDK
+RUN pip install paho-mqtt requests tinynumpy
+COPY sdk $WORKDIR/sdk
+COPY docker $WORKDIR/docker
+
+### define entrypoint
+ENTRYPOINT ["sh", "docker/docker-entrypoint.sh"]
+CMD ["myhouse"]

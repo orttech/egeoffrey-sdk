@@ -109,7 +109,7 @@ class Mqtt_client():
                 # parse the incoming request into a message data structure
                 message = Message()
                 message.parse(msg.topic, msg.payload)
-                if self.__module.verbose: self.__module.log_debug("Received message "+message.dump())
+                if self.__module.verbose: self.__module.log_debug("Received message "+message.dump(), False)
             except Exception,e:
                 self.__module.log_error("Invalid message received on "+msg.topic+" - "+msg.payload+": "+exception.get(e))
                 return
@@ -122,10 +122,12 @@ class Mqtt_client():
                         if message.sender == "controller/config" and message.command == "CONF":
                             # notify the module about the configuration just received
                             try:
-                                self.__module.on_configuration(message)
+                                is_valid_configuration = self.__module.on_configuration(message)
                             except Exception,e: 
                                 self.__module.log_error("runtime error during on_configuration() - "+message.dump()+": "+exception.get(e))
                                 return
+                            # if the configuration has not been accepted by the module, ignore it
+                            if is_valid_configuration is not None and not is_valid_configuration: return
                             # check if we had to wait for this message to start the module
                             if len(self.__topics_to_wait) > 0:
                                 for req_pattern in self.__topics_to_wait:
@@ -133,7 +135,7 @@ class Mqtt_client():
                                         self.__topics_to_wait.remove(message.topic)
                                         # if there are no more topics to wait for, this service is now configured
                                         if len(self.__topics_to_wait) == 0: 
-                                            self.__module.log_debug("Configuration completed for "+self.__module.fullname+", starting the module...")
+                                            self.__module.log_info("Configuration completed")
                                             # set the configured flag to true, this will cause the service to start
                                             self.__module.configured = True
                                         else:
