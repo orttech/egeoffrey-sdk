@@ -9,7 +9,7 @@ ENV WORKDIR=/myHouse
 WORKDIR $WORKDIR
 
 ### install myHouse SDK
-RUN pip install paho-mqtt requests tinynumpy
+RUN pip install paho-mqtt requests tinynumpy pyyaml
 COPY sdk $WORKDIR/sdk
 COPY docker $WORKDIR/docker
 

@@ -64,6 +64,7 @@ class Mqtt_client {
     
     // Build the full topic (e.g. myhouse/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
     __build_topic(from_module, to_module, command, args) {
+        if (args == "") args = "null"
         return ["myHouse", constants["API_VERSION"], this.__module.house_id, from_module, to_module, command, args].join("/")
     }
     

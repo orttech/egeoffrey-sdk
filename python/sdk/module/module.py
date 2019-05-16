@@ -7,13 +7,13 @@ import threading
 import os
 import time
 from abc import ABCMeta, abstractmethod
-from datetime import datetime
 
 from sdk.module.helpers.message import Message
 from sdk.module.helpers.mqtt_client import Mqtt_client
 from sdk.module.helpers.session import Session
 import sdk.utils.exceptions as exception
 import sdk.constants as constants
+import sdk.utils.strings
 
 class Module(threading.Thread):
     # used for enforcing abstract methods
@@ -30,7 +30,7 @@ class Module(threading.Thread):
         self.watchdog = None
         # module version
         self.version = constants.VERSION
-        self.build = ""
+        self.build = None
         # gateway settings
         self.gateway_hostname = os.getenv("MYHOUSE_GATEWAY_HOSTNAME", "myhouse-gateway")
         self.gateway_port = int(os.getenv("MYHOUSE_GATEWAY_PORT", 443))
@@ -96,18 +96,15 @@ class Module(threading.Thread):
         self.__mqtt.publish(message.recipient, message.command, message.args, payload, message.retain)
         
     # log a message
-    def __log(self, level, text, allow_remote_logging):
+    def __log(self, severity, text, allow_remote_logging):
         if self.logging_local:
-            severity = str(level.upper())
-            if severity == "WARNING": severity = "\033[93mWARNING\033[0m"
-            elif severity == "ERROR": severity = "\033[91mERROR\033[0m"
-            print "["+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"]["+self.house_id+"]["+str(self.fullname)+"] "+severity+ ": "+str(text)
+            print sdk.utils.strings.format_log_line(severity, self.fullname, text)
         if self.logging_remote and allow_remote_logging:
             # send the message to the logger module
             message = Message(self)
             message.recipient = "controller/logger"
             message.command = "LOG"
-            message.args = level
+            message.args = severity
             message.set_data(text)
             self.send(message)
 
@@ -144,10 +141,21 @@ class Module(threading.Thread):
     # ensure the configuration provided contains all the required settings
     def is_valid_configuration(self, settings, configuration):
         return self.__is_valid_configuration(settings, configuration)
+    
+    # wrap around time sleep so to break if the module is stopping
+    def sleep(self, sleep_time):
+        step = 0.5
+        slept = 0
+        if sleep_time < step: step = sleep_time
+        while (slept <= sleep_time):
+            if self.stopping: break
+            time.sleep(step)
+            slept = slept+step
         
     # run the module, called when starting the thread
     def run(self):
-        self.log_info("Starting module v"+self.version+" (build "+self.build+")")
+        build = " (build "+self.build+")" if self.build is not None else ""
+        self.log_info("Starting module v"+self.version+build)
         # connect to the mqtt broker
         self.__mqtt.start()
         # subscribe to any request addressed to this module  
@@ -161,8 +169,8 @@ class Module(threading.Thread):
         message.args = "1"
         self.send(message)
         # if the service is not configured (waiting for a configuration file), sleep until it will be
-        while not self.configured: 
-            time.sleep(1)
+        while not self.configured:
+            self.sleep(1)
         # run the user's callback if configured, otherwise will be started once all the required configuration will be received
         try: 
             self.on_start()

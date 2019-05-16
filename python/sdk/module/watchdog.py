@@ -9,6 +9,7 @@ import os
 import signal
 import sys
 import hashlib
+import yaml
 
 from sdk.module.module import Module
 from sdk.module.helpers.message import Message
@@ -77,18 +78,23 @@ class Watchdog(Module):
         if entry["started"]: return
         classname = entry["file"].capitalize() 
         try: 
+            # ensure the module exists
+            if not os.path.isfile(entry["package"]+"/"+entry["file"]+".py"):
+                print "Module "+entry["package"]+"/"+entry["file"]+" not found, skipping"
+                return
             # import the class from the module
-            # TODO: check if the file exists
-            imported_module = __import__(entry["package"]+"."+entry["file"], fromlist=[classname]) 
+            imported_module = __import__(entry["package"]+"."+entry["file"], fromlist=[classname])
+            # reload the code
             reload(imported_module)
+            # crate the object
             class_object = getattr(imported_module, classname)
             thread = class_object(entry["scope"], entry["name"])
             # set attributes
             hasher = hashlib.md5()
             hasher.update(repr(imported_module))
             thread.build = hasher.hexdigest()[:7]
-            thread.daemon = True 
-            thread.watchdog = self 
+            thread.daemon = True
+            thread.watchdog = self
             # run the thread
             thread.start()
             # keep track of the managed thread
@@ -137,19 +143,41 @@ class Watchdog(Module):
             self.log_debug("Pinging "+module["fullname"]+"...")
             module["ping"] = time.time() # keep track of the timestamp of the request
             self.send(message)
-            time.sleep(1)
+            self.sleep(1)
         
     # What to do when running    
     def on_start(self):
+        # send the manifest if any
+        manifest_file = "manifest.yml"
+        if os.path.isfile(manifest_file):
+            with open(manifest_file) as f: content = f.read()
+            try:
+                manifest = yaml.load(content, Loader=yaml.SafeLoader)
+            except Exception,e: 
+                print "invalid manifest file in "+manifest_file+" - "+exception.get(e)
+            # clear up previous manifest if any
+            message = Message(self)
+            message.recipient = "*/*"
+            message.command = "MANIFEST"
+            message.set_null()
+            message.retain = True 
+            self.send(message)
+            # publish the new manifest
+            message = Message(self)
+            message.recipient = "*/*"
+            message.command = "MANIFEST"
+            message.set_data(manifest)
+            message.retain = True 
+            self.send(message)
         # start all the requested modules
         for entry in self.modules:
             self.start_module(entry)
-            time.sleep(0.1)
-        time.sleep(60)
+            self.sleep(0.1)
+        self.sleep(60)
         # loop forever, pinging the managed modules from time to time
         while True:
             self.ping()
-            time.sleep(5*60)
+            self.sleep(5*60)
         
     # What to do when shutting down
     def on_stop(self):

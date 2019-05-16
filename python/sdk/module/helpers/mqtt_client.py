@@ -37,11 +37,12 @@ class Mqtt_client():
             try:
                 self.__module.log_debug("Connecting to "+self.__module.gateway_hostname+":"+str(self.__module.gateway_port)+" ("+self.__module.gateway_transport+", ssl="+str(self.__module.gateway_ssl)+")")
                 self.__gateway.connect(self.__module.gateway_hostname, self.__module.gateway_port)
+                # TODO: this has to be moved into on_connect but is never called if moved
                 self.__module.connected = True
                 # TODO: last will? e.g. log a disconnecting message
             except Exception,e:
                 self.__module.log_error("Unable to connect to "+self.__module.gateway_hostname+":"+str(self.__module.gateway_port)+" - "+exception.get(e))
-                time.sleep(5)
+                self.__module.sleep(10)
 
     # subscribe to a given topic
     def __subscribe(self, topic, qos=0):
@@ -50,6 +51,7 @@ class Mqtt_client():
         
     # Build the full topic (e.g. myhouse/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
     def __build_topic(self, from_module, to_module, command, args):
+        if args == "": args = "null"
         return "/".join(["myHouse", constants.API_VERSION, self.__module.house_id, from_module, to_module, command, args])
 
     # publish a given topic 
@@ -77,7 +79,7 @@ class Mqtt_client():
         # set client id. Format: myhouse-<house_id>-<scope>-<name>
         self.__client_id = "-".join(["myhouse", self.__module.house_id, self.__module.scope, self.__module.name])
         # get an instance of the MQTT client object
-        self.__gateway = mqtt.Client(client_id=self.__client_id, clean_session=False, userdata=None, transport=self.__module.gateway_transport)
+        self.__gateway = mqtt.Client(client_id=self.__client_id, clean_session=True, userdata=None, transport=self.__module.gateway_transport)
         # define what to do upon connect
         def __on_connect(client, userdata, flags, rc):
             try:

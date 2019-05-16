@@ -9,7 +9,7 @@ class Module {
         this.fullname = scope+"/"+name
         // module version
         this.version = constants.VERSION
-        this.build = "N.A."
+        this.build = null
         // gateway settings
         this.gateway_hostname = "MYHOUSE_GATEWAY_HOSTNAME" in window ? window.MYHOUSE_GATEWAY_HOSTNAME : "localhost"
         this.gateway_port = "MYHOUSE_GATEWAY_PORT" in window ? window.MYHOUSE_GATEWAY_PORT : 443
@@ -81,14 +81,14 @@ class Module {
     }
 
     // log a message
-    __log(level, text, allow_remote_logging) {
-        if (this.logging_local) console.log("["+this.house_id+"]["+this.fullname+"] "+level.toUpperCase()+": "+text)
+    __log(severity, text, allow_remote_logging) {
+        if (this.logging_local) console.log(format_log_line(severity, this.fullname, text))
         if (this.logging_remote && allow_remote_logging) {
             // send the message to the logger module
             message = Message(this)
             message.recipient = "controller/logger"
             message.command = "LOG"
-            message.args = level
+            message.args = severity
             message.set_data(text)
             this.send(message)
         }
@@ -139,7 +139,8 @@ class Module {
     
     // run the module, called when starting the thread
     run() {
-        this.log_info("Starting module v"+this.version+" (build "+this.build+")")
+        var build = this.build != null ? " (build "+this.build+")" : ""
+        this.log_info("Starting module v"+this.version+build)
         // connect to the mqtt broker
         this.__mqtt.start()
         // subscribe to any request addressed to this module  
