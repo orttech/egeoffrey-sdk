@@ -110,7 +110,7 @@ class Mqtt_client():
             try:
                 # parse the incoming request into a message data structure
                 message = Message()
-                message.parse(msg.topic, msg.payload)
+                message.parse(msg.topic, msg.payload, msg.retain)
                 if self.__module.verbose: self.__module.log_debug("Received message "+message.dump(), False)
             except Exception,e:
                 self.__module.log_error("Invalid message received on "+msg.topic+" - "+msg.payload+": "+exception.get(e))
@@ -124,6 +124,7 @@ class Mqtt_client():
                         if message.sender == "controller/config" and message.command == "CONF":
                             # notify the module about the configuration just received
                             try:
+                                # TODO: this is all executed by mqtt network thread so it is blocking. Move it
                                 is_valid_configuration = self.__module.on_configuration(message)
                             except Exception,e: 
                                 self.__module.log_error("runtime error during on_configuration() - "+message.dump()+": "+exception.get(e))

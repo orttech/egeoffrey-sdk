@@ -72,6 +72,11 @@ class Mqtt_client {
     publish(to_module, command, args, payload_data, retain=false) {
         var payload = payload_data
         if (payload != null) payload = JSON.stringify(payload)
+        else {
+            var buffer = new ArrayBuffer(1)
+            buffer[0] = null
+            payload = buffer
+        }
         var topic = this.__build_topic(this.__module.fullname, to_module, command, args)
         if (this.__module.connected) this.__gateway.send(topic, payload, 0, retain=retain)
         else this.__queue.push([topic, payload, retain])
@@ -108,7 +113,7 @@ class Mqtt_client {
             try {
                 // parse the incoming request into a message data structure
                 var message = new Message()
-                message.parse(msg.destinationName, msg.payloadString)
+                message.parse(msg.destinationName, msg.payloadString, msg.retained)
                 if (this_class.__module.verbose) this_class.__module.log_debug("Received message "+message.dump(), false)
             } catch (e) {
                 this_class.__module.log_error("Invalid message received on "+msg.destinationName+" - "+msg.payloadString+": "+get_exception(e))

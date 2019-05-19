@@ -10,9 +10,26 @@ class DateTimeUtils {
        return parseInt(timestamp+this.__utc_offset*3600)
     }
 
+    // adjust the given timestamp to utc
+    utc(timestamp) {
+       return parseInt(timestamp-this.__utc_offset*3600)
+    }
+    
     // return the current timestamp, in the local timezone
     now() {
         return this.timezone(parseInt(Date.now()/1000), this.__utc_offset)
+    }
+    
+    // format the provided timestamp for printing
+    format_timestamp(timestamp=this.now()) {
+        var date = new Date(this.utc(timestamp) * 1000)
+        var day = date.getDate() < 10 ? "0"+date.getDate() : date.getDate()
+        var month = (date.getMonth()+1) < 10 ? "0"+(date.getMonth()+1) : date.getMonth()+1
+        var year = date.getFullYear()
+        var hour = date.getHours() < 10 ? "0"+date.getHours() : date.getHours()
+        var minute = date.getMinutes() < 10 ? "0"+date.getMinutes() : date.getMinutes()
+        var second = date.getSeconds() < 10 ? "0"+date.getSeconds() : date.getSeconds()
+        return day+"/"+month+"/"+year+" "+hour+":"+minute+":"+second
     }
 
     // return the difference between two timestamps in a human readable format

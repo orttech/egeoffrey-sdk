@@ -50,3 +50,7 @@ function format_log_line(severity, module, text) {
     var now = Date()
     return "["+now.toLocaleString()+"]["+module+"] "+severity.toUpperCase()+ ": "+truncate(text, 2000)
 }
+
+function format_multiline(string, length) {
+    return string.match(new RegExp('.{1,' + length + '}', 'g')).join("<br>")
+}

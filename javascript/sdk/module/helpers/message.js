@@ -56,7 +56,7 @@ class Message {
     }
     
     // parse MQTT message (topic and payload)
-    parse(topic, payload) {
+    parse(topic, payload, retain) {
         var topics = topic.split("/")
         // sanity check
         if (topics.legth  < 8) throw "missing required information in topic"
@@ -66,6 +66,7 @@ class Message {
         this.sender = topics[3]+"/"+topics[4]
         this.recipient = topics[5]+"/"+topics[6]
         this.command = topics[7]
+        this.retain = retain
         this.args = topics.slice(8,topics.length).join("/")
         // null payload (for clearing retain flag)
         if (payload == null) this.is_null = true

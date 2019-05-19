@@ -8,6 +8,7 @@ import random
 import copy
 
 import sdk.constants as constants
+import sdk.utils.exceptions as exception
 
 class Message():
     def __init__(self, module=None):
@@ -57,7 +58,7 @@ class Message():
         self.__add_request_id()
 
     # parse a MQTT message (topic and payload)
-    def parse(self, topic, payload):
+    def parse(self, topic, payload, retain):
         # split the topic
         topics = topic.split("/")
         # sanity check
@@ -73,6 +74,7 @@ class Message():
         self.recipient = topics[5]+"/"+topics[6]
         self.command = topics[7]
         self.args = "/".join(topics[8:])
+        self.retain = retain
         # null payload (for clearing retain flag)
         if payload is None or payload == "":
             self.is_null = True
@@ -80,8 +82,8 @@ class Message():
             # expecting a json payload
             try: 
                 self.__payload = json.loads(payload)
-            except:
-                raise Exception("payload in an invalid json format")
+            except Exception,e:
+                raise Exception("payload in an invalid JSON format: "+exception.get(e)+" - "+str(payload))
 
     # set the payload to value
     def set_data(self, value):
