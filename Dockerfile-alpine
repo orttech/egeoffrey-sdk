@@ -5,13 +5,15 @@ ARG ARCHITECTURE
 FROM $ARCHITECTURE/python:2.7-alpine
 
 ### define workdir
-ENV WORKDIR=/myHouse 
+ENV WORKDIR=/myHouse
 WORKDIR $WORKDIR
 
+### install dependencies
+RUN apk update && apk add jq && rm -rf /var/cache/apk/*
+RUN pip install paho-mqtt requests tinynumpy pyyaml yq
+
 ### install myHouse SDK
-RUN pip install paho-mqtt requests tinynumpy pyyaml
-COPY sdk $WORKDIR/sdk
-COPY docker $WORKDIR/docker
+COPY . $WORKDIR
 
 ### define entrypoint
 ENTRYPOINT ["sh", "docker/docker-entrypoint.sh"]

@@ -8,7 +8,7 @@ class Module {
         this.name = name
         this.fullname = scope+"/"+name
         // module version
-        this.version = constants.VERSION
+        this.version = null
         this.build = null
         // gateway settings
         this.gateway_hostname = "MYHOUSE_GATEWAY_HOSTNAME" in window ? window.MYHOUSE_GATEWAY_HOSTNAME : "localhost"
@@ -139,8 +139,7 @@ class Module {
     
     // run the module, called when starting the thread
     run() {
-        var build = this.build != null ? " (build "+this.build+")" : ""
-        this.log_info("Starting module v"+this.version+build)
+        this.log_info("Starting module")
         // connect to the mqtt broker
         this.__mqtt.start()
         // subscribe to any request addressed to this module  

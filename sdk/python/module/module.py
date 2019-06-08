@@ -8,12 +8,12 @@ import os
 import time
 from abc import ABCMeta, abstractmethod
 
-from sdk.module.helpers.message import Message
-from sdk.module.helpers.mqtt_client import Mqtt_client
-from sdk.module.helpers.session import Session
-import sdk.utils.exceptions as exception
-import sdk.constants as constants
-import sdk.utils.strings
+from sdk.python.module.helpers.message import Message
+from sdk.python.module.helpers.mqtt_client import Mqtt_client
+from sdk.python.module.helpers.session import Session
+import sdk.python.utils.exceptions as exception
+import sdk.python.constants as constants
+import sdk.python.utils.strings
 
 class Module(threading.Thread):
     # used for enforcing abstract methods
@@ -29,8 +29,9 @@ class Module(threading.Thread):
         self.fullname = scope+"/"+name
         self.watchdog = None
         # module version
-        self.version = constants.VERSION
+        self.version = None
         self.build = None
+        self.manifest = None
         # gateway settings
         self.gateway_hostname = os.getenv("MYHOUSE_GATEWAY_HOSTNAME", "myhouse-gateway")
         self.gateway_port = int(os.getenv("MYHOUSE_GATEWAY_PORT", 443))
@@ -98,7 +99,7 @@ class Module(threading.Thread):
     # log a message
     def __log(self, severity, text, allow_remote_logging):
         if self.logging_local:
-            print sdk.utils.strings.format_log_line(severity, self.fullname, text)
+            print sdk.python.utils.strings.format_log_line(severity, self.fullname, text)
         if self.logging_remote and allow_remote_logging:
             # send the message to the logger module
             message = Message(self)
@@ -155,7 +156,7 @@ class Module(threading.Thread):
     # run the module, called when starting the thread
     def run(self):
         build = " (build "+self.build+")" if self.build is not None else ""
-        self.log_info("Starting module v"+self.version+build)
+        self.log_info("Starting module"+build)
         # connect to the mqtt broker
         self.__mqtt.start()
         # subscribe to any request addressed to this module  

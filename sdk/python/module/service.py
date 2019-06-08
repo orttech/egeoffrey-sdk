@@ -1,5 +1,5 @@
-from sdk.module.module import Module
-from sdk.module.helpers.cache import Cache
+from sdk.python.module.module import Module
+from sdk.python.module.helpers.cache import Cache
 
 # service common functionalities
 class Service(Module):

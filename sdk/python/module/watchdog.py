@@ -11,10 +11,10 @@ import sys
 import hashlib
 import yaml
 
-from sdk.module.module import Module
-from sdk.module.helpers.message import Message
+from sdk.python.module.module import Module
+from sdk.python.module.helpers.message import Message
 
-import sdk.utils.exceptions as exception
+import sdk.python.utils.exceptions as exception
 
 class Watchdog(Module):
     def __init__(self):
@@ -144,6 +144,32 @@ class Watchdog(Module):
             module["ping"] = time.time() # keep track of the timestamp of the request
             self.send(message)
             self.sleep(1)
+            
+    def load_default_config(self):
+        config_dir = "default_config"
+        default_config = []
+        if not os.path.isdir(config_dir): return default_config
+        # walk through the filesystem containing the default configuration
+        for (current_path, dirnames, filenames) in os.walk(config_dir): 
+            for filename in filenames:
+                if filename[0] == ".": continue
+                file = current_path+os.sep+filename
+                # parse the file paths
+                name, extension = os.path.splitext(file)
+                if extension != ".yml": continue
+                # remove base configuration dir to build the topic
+                topic = name.replace(config_dir+os.sep,"")
+                # read the file's content
+                with open(file) as f: content = f.read()
+                # ensure the yaml file is valid
+                try:
+                    content = yaml.load(content, Loader=yaml.SafeLoader)
+                except Exception,e: 
+                    self.log_warning("configuration file in an invalid YAML format: "+filename+" - "+exception.get(e))
+                    continue
+                # update the index with the corresponding hash
+                default_config.append({topic: content})
+        return default_config
         
     # What to do when running    
     def on_start(self):
@@ -155,6 +181,8 @@ class Watchdog(Module):
                 manifest = yaml.load(content, Loader=yaml.SafeLoader)
             except Exception,e: 
                 print "invalid manifest file in "+manifest_file+" - "+exception.get(e)
+            # embed default config into the manifest
+            manifest["default_config"] = self.load_default_config()
             # clear up previous manifest if any
             message = Message(self)
             message.recipient = "*/*"
@@ -163,6 +191,7 @@ class Watchdog(Module):
             message.retain = True 
             self.send(message)
             # publish the new manifest
+            # TODO: use the manifest to check SDK required version
             message = Message(self)
             message.recipient = "*/*"
             message.command = "MANIFEST"
@@ -181,6 +210,7 @@ class Watchdog(Module):
         
     # What to do when shutting down
     def on_stop(self):
+        # TODO: remove manifest
         pass
 
     # What to do when receiving a request for this module    

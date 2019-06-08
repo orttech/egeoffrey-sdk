@@ -2,9 +2,9 @@ import time
 import Queue
 from abc import ABCMeta, abstractmethod
 
-from sdk.module.module import Module
+from sdk.python.module.module import Module
 
-import sdk.utils.exceptions as exception
+import sdk.python.utils.exceptions as exception
 
 # notification common functionalities
 class Notification(Module):

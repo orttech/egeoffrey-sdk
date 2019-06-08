@@ -1,4 +1,4 @@
-from sdk.module.module import Module
+from sdk.python.module.module import Module
 
 # controller common functionalities
 class Controller(Module):

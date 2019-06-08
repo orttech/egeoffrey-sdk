@@ -52,5 +52,8 @@ function format_log_line(severity, module, text) {
 }
 
 function format_multiline(string, length) {
+    if (string == null) return ""
+    var match = string.match(new RegExp('.{1,' + length + '}', 'g'))
+    if (match == null) return ""
     return string.match(new RegExp('.{1,' + length + '}', 'g')).join("<br>")
 }

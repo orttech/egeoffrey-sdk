@@ -1,4 +1,4 @@
-from sdk.module.module import Module
+from sdk.python.module.module import Module
 
 # interaction common functionalities
 class Interaction(Module):

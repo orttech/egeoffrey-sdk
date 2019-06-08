@@ -7,8 +7,8 @@ import json
 import random
 import copy
 
-import sdk.constants as constants
-import sdk.utils.exceptions as exception
+import sdk.python.constants as constants
+import sdk.python.utils.exceptions as exception
 
 class Message():
     def __init__(self, module=None):
