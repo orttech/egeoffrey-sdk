@@ -31,8 +31,8 @@ class Notification(Module):
     # filter notification
     def __filter_notification(self, severity, text):
         # if there is a filter on the notification, apply it
-        if "filter" in self.config:
-            configuration = self.config["filter"]
+        if "suppress" in self.config:
+            configuration = self.config["suppress"]
             # TODO: apply timezone
             # retrieve the current hour
             hour = int(time.strftime("%H"))
@@ -42,21 +42,21 @@ class Notification(Module):
                 self.__current_hour = hour
             # initialize
             mute_override = False
-            min_severity = None
-            mute_min_severity = None
+            severity_below = None
+            timeframe_severity_exception = None
             # ensure the severity is equals or above the minimum severity configured
-            if "min_severity" in configuration:
-                min_severity = configuration["min_severity"]
-                if min_severity == "warning" and severity in ["info"]: return
-                elif min_severity == "alert" and severity in ["info", "warning"]: return
+            if "severity_below" in configuration:
+                severity_below = configuration["severity_below"]
+                if severity_below == "warning" and severity in ["info"]: return
+                elif severity_below == "alert" and severity in ["info", "warning"]: return
             # check if the notification is severe enough to override the mute setting
-            if "mute_min_severity" in configuration:
-                mute_min_severity = configuration["mute_min_severity"]
-                if mute_min_severity == "warning" and severity in ["warning", "alert"]: mute_override = True
-                elif mute_min_severity == "alert" and severity in ["alert"]: mute_override = True
+            if "timeframe_severity_exception" in configuration:
+                timeframe_severity_exception = configuration["timeframe_severity_exception"]
+                if timeframe_severity_exception == "warning" and severity in ["warning", "alert"]: mute_override = True
+                elif timeframe_severity_exception == "alert" and severity in ["alert"]: mute_override = True
             # ensure the channel is not mute now
-            if "mute" in configuration and "-" in configuration["mute"] and not mute_override:
-                timeframe = configuration["mute"].split("-")
+            if "timeframe" in configuration and "-" in configuration["timeframe"] and not mute_override:
+                timeframe = configuration["timeframe"].split("-")
                 if len(timeframe) != 2: return
                 timeframe[0] = int(timeframe[0])
                 timeframe[1] = int(timeframe[1])
@@ -65,10 +65,10 @@ class Notification(Module):
                 # e.g. 20-07
                 if timeframe[0] > timeframe[1] and (hour >= timeframe[0] or hour < timeframe[1]): return
             # check if rate limit is configured and we have not exceed the numner of notifications during this hour
-            if "rate_limit" in configuration and configuration["rate_limit"] != 0 and self.__counter >= configuration["rate_limit"]: return
+            if "rate_hour" in configuration and configuration["rate_hour"] != 0 and self.__counter >= configuration["rate_hour"]: return
             # increase the counter
             self.__counter = self.__counter + 1
-            if "rate_limit" in configuration: self.log_debug("notification #"+str(self.__counter)+" for hour "+str(self.__current_hour)+":00")
+            if "rate_hour" in configuration: self.log_debug("notification #"+str(self.__counter)+" for hour "+str(self.__current_hour)+":00")
         # play the notification
         self.__notify(severity, text)
     

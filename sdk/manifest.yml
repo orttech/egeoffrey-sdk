@@ -1,5 +1,5 @@
 package: myhouse-sdk
-revision: 1
+revision: 2
 version: development
 git: myhouse-project/myhouse-sdk
 modules: []

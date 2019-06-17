@@ -223,6 +223,7 @@ class Mqtt_client {
     
     // disconnect from the MQTT broker
     stop() {
+        if (this.__gateway == null) return
         try {
             if (this.__gateway.isConnected()) {
                 this.__gateway.disconnect()

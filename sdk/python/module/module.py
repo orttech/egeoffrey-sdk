@@ -28,10 +28,9 @@ class Module(threading.Thread):
         self.name = name
         self.fullname = scope+"/"+name
         self.watchdog = None
-        # module version
+        # module version and build (will be set by the watchdog)
         self.version = None
         self.build = None
-        self.manifest = None
         # gateway settings
         self.gateway_hostname = os.getenv("MYHOUSE_GATEWAY_HOSTNAME", "myhouse-gateway")
         self.gateway_port = int(os.getenv("MYHOUSE_GATEWAY_PORT", 443))

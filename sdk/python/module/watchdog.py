@@ -17,12 +17,32 @@ from sdk.python.module.helpers.message import Message
 import sdk.python.utils.exceptions as exception
 
 class Watchdog(Module):
-    def __init__(self):
-        # call superclass function
-        super(Watchdog, self).__init__("system","watchdog_"+str(random.randint(1000,9999)))
-        
     # What to do when initializing
     def on_init(self):
+        # load the manifest file
+        self.manifest = None
+        manifest_file = "manifest.yml"
+        if not os.path.isfile(manifest_file): 
+            print "Manifest not found, refusing to start"
+            sys.exit(1)
+        with open(manifest_file) as f: content = f.read()
+        # ensure the manifest is valid
+        try:
+            manifest = yaml.load(content, Loader=yaml.SafeLoader)
+        except Exception,e: 
+            print "invalid manifest file in "+manifest_file+" - "+exception.get(e)
+            sys.exit(1)
+        for setting in ["package", "revision", "version", "git", "modules"]:
+            if setting not in manifest:
+                print setting+" is missing from manifest"
+                sys.exit(1)
+        # embed default config into the manifest
+        manifest["default_config"] = self.load_default_config()
+        self.manifest = manifest
+        # set watchdog service name
+        self.scope = "system"
+        self.name = "watchdog_"+self.manifest["package"]+"_"+str(random.randint(1000,9999))
+        self.fullname = self.scope+"/"+self.name
         # array of modules
         self.modules = [] 
         # map module fullname with thread
@@ -92,6 +112,7 @@ class Watchdog(Module):
             # set attributes
             hasher = hashlib.md5()
             hasher.update(repr(imported_module))
+            thread.version = str(self.manifest["version"])+"-"+str(self.manifest["revision"])
             thread.build = hasher.hexdigest()[:7]
             thread.daemon = True
             thread.watchdog = self
@@ -128,6 +149,7 @@ class Watchdog(Module):
             # ask all the modules to stop
             self.stop_module(entry)
             #time.sleep(0.1)
+        self.join()
         sys.exit(0)
     
     # ping all the modules belonging to this watchdog
@@ -173,31 +195,23 @@ class Watchdog(Module):
         
     # What to do when running    
     def on_start(self):
-        # send the manifest if any
-        manifest_file = "manifest.yml"
-        if os.path.isfile(manifest_file):
-            with open(manifest_file) as f: content = f.read()
-            try:
-                manifest = yaml.load(content, Loader=yaml.SafeLoader)
-            except Exception,e: 
-                print "invalid manifest file in "+manifest_file+" - "+exception.get(e)
-            # embed default config into the manifest
-            manifest["default_config"] = self.load_default_config()
-            # clear up previous manifest if any
-            message = Message(self)
-            message.recipient = "*/*"
-            message.command = "MANIFEST"
-            message.set_null()
-            message.retain = True 
-            self.send(message)
-            # publish the new manifest
-            # TODO: use the manifest to check SDK required version
-            message = Message(self)
-            message.recipient = "*/*"
-            message.command = "MANIFEST"
-            message.set_data(manifest)
-            message.retain = True 
-            self.send(message)
+        # clear up previous manifest if any
+        message = Message(self)
+        message.recipient = "*/*"
+        message.command = "MANIFEST"
+        message.args = self.manifest["package"]
+        message.set_null()
+        message.retain = True 
+        self.send(message)
+        # publish the new manifest
+        # TODO: use the manifest to check SDK required version
+        message = Message(self)
+        message.recipient = "*/*"
+        message.command = "MANIFEST"
+        message.args = self.manifest["package"]
+        message.set_data(self.manifest)
+        message.retain = True 
+        self.send(message)
         # start all the requested modules
         for entry in self.modules:
             self.start_module(entry)
@@ -210,8 +224,14 @@ class Watchdog(Module):
         
     # What to do when shutting down
     def on_stop(self):
-        # TODO: remove manifest
-        pass
+        # remove the manifest
+        message = Message(self)
+        message.recipient = "*/*"
+        message.command = "MANIFEST"
+        message.args = self.manifest["package"]
+        message.set_null()
+        message.retain = True 
+        self.send(message)
 
     # What to do when receiving a request for this module    
     def on_message(self, message):

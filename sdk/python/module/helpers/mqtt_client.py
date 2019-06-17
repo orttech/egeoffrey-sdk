@@ -209,6 +209,7 @@ class Mqtt_client():
             
     # disconnect from the MQTT broker
     def stop(self):
+        if self.__gateway == None: return
         self.__gateway.loop_stop()
         self.__gateway.disconnect()
         try:
