@@ -2,7 +2,7 @@ package: myhouse-sdk
 revision: 2
 version: development
 github: myhouse-project/myhouse-sdk
-dockerhub: myhouse-project/myhouse-sdk
+dockerhub: myhouseproject/myhouse-sdk
 description: 
 tags: 
 modules: []
