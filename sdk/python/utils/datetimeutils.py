@@ -33,10 +33,9 @@ class DateTimeUtils():
     # generate a given timestamp based on the input (in the local timezone)
     def get_timestamp(self, years, months, days, hours, minutes, seconds):
         timestamp = datetime.datetime(years, months, days, hours, minutes, seconds, 0)
-        return self.timezone(int(time.mktime(timestamp.timetuple())))
+        return int(time.mktime(timestamp.timetuple()))
 
     # return day start timestamp
-    # TODO: timezone
     def day_start(self, timestamp):
         date = datetime.datetime.fromtimestamp(self.utc(timestamp))
         return self.get_timestamp(date.year,date.month,date.day,0,0,0)
@@ -59,16 +58,3 @@ class DateTimeUtils():
     # return a timestamp as a human readable format
     def timestamp2date(self, timestamp):
         return datetime.datetime.fromtimestamp(self.utc(int(timestamp))).strftime('%Y-%m-%d %H:%M:%S')
-     
-# TODO 
-# return the realtime timestamp
-#def realtime(hours=conf["general"]["timeframes"]["realtime_hours"]):
-#	return now()-hours*conf["constants"]["1_hour"]
-
-# return the recent timestamp
-#def recent(hours=conf["general"]["timeframes"]["recent_hours"]):
-#	return now()-hours*conf["constants"]["1_hour"]
-
-# return the history timestamp
-#def history(days=conf["general"]["timeframes"]["history_days"]):
-#	return now()-days*conf["constants"]["1_day"]
