@@ -32,7 +32,7 @@ class Watchdog(Module):
         except Exception,e: 
             print "invalid manifest file in "+manifest_file+" - "+exception.get(e)
             sys.exit(1)
-        for setting in ["package", "revision", "version", "git", "modules"]:
+        for setting in ["package", "revision", "version", "github", "dockerhub", "modules"]:
             if setting not in manifest:
                 print setting+" is missing from manifest"
                 sys.exit(1)
