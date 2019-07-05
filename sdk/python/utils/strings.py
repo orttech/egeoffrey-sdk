@@ -21,6 +21,7 @@ def hex2string(hex):
 # format a log line for printing
 def format_log_line(severity, module, text):
     severity = str(severity.upper())
-    if severity == "WARNING": severity = "\033[93mWARNING\033[0m"
-    elif severity == "ERROR": severity = "\033[91mERROR\033[0m"
+    if severity == "WARNING": severity = "\033[33mWARNING\033[0m"
+    elif severity == "ERROR": severity = "\033[31mERROR\033[0m"
+    elif severity == "VALUE": severity = "\033[32mVALUE\033[0m"
     return "["+datetime.now().strftime("%Y-%m-%d %H:%M:%S")+"]["+str(module)+"] "+severity+ ": "+truncate(str(text), 2000)
