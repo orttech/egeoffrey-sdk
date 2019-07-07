@@ -209,13 +209,13 @@ class Mqtt_client {
         } 
         // subscribe the topic and keep track of it
         if (this.__module.connected) {
-            if (this.__topics_subscribed.includes(topic)) return null
+            if (this.__topics_subscribed.includes(topic)) return topic
             this.__subscribe(topic)
             this.__topics_subscribed.push(topic)
         }
         // if not connected, will subscribed once connected
         else {
-            if (this.__topics_to_subscribe.includes(topic)) return null
+            if (this.__topics_to_subscribe.includes(topic)) return topic
             this.__topics_to_subscribe.push(topic)
         }
         return topic
