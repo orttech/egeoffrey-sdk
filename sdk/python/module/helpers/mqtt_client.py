@@ -197,12 +197,12 @@ class Mqtt_client():
             self.__module.log_debug("will wait for configuration on "+str(self.__topics_to_wait))
         # if connected, subscribe the topic and keep track of it
         if self.__module.connected: 
-            if topic in self.__topics_subscribed: return None
+            if topic in self.__topics_subscribed: return topic
             self.__subscribe(topic)
             self.__topics_subscribed.append(topic)
         # if not connected, will subscribe once connected
         else:
-            if topic in self.__topics_to_subscribe: return None
+            if topic in self.__topics_to_subscribe: return topic
             self.__topics_to_subscribe.append(topic)
         # return the topic so the user can unsubscribe from it if needed
         return topic
