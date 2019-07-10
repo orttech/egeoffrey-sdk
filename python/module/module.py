@@ -125,10 +125,6 @@ class Module(threading.Thread):
     def log_error(self, text, allow_remote_logging=True):
         self.__log("error", text, allow_remote_logging)
         
-    # handle logs for new values from sensors
-    def log_value(self, text, allow_remote_logging=True):
-        self.__log("value", text, allow_remote_logging)        
-        
     # ensure all the items of an array of settings are included in the configuration object provided
     def __is_valid_configuration(self, settings, configuration):
         if not isinstance(configuration, dict): return False

@@ -115,11 +115,6 @@ class Module {
         this.__log("error", text, allow_remote_logging)
     }
     
-    // handle logs for new values from sensors
-    log_value(text, allow_remote_logging=true) {
-        this.__log("value", text, allow_remote_logging)
-    }
-    
     // ensure all the items of the array of settings are included in the configuration object provided
     __is_valid_configuration(settings, configuration) {
         if (configuration.constructor != Object) return false

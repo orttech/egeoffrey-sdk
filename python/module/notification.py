@@ -76,7 +76,7 @@ class Notification(Module):
     def __notify(self, severity, text):
         # another notification is already in progress, queue it
         if self.__playing:
-            self.log_debug("queueing notification about "+text)
+            self.log_debug("queuing notification about "+text)
             self.__queue.put([severity, text])
         # play the notification
         else:
