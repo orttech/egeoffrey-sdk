@@ -92,13 +92,14 @@ class Notification(Module):
                 self.__notify(entry[0], entry[1])
                 
 
-    # What to do when receiving a request for this module    
+    # What to do when receiving a request for this module
     def on_message(self, message):
         if not self.configured: return
         if "disabled" in self.config and self.config["disabled"]: return
         # capture notifications from alerter
         if message.sender == "controller/alerter" and message.command == "NOTIFY":
-            self.__filter_notification(message.args, message.get_data())
+            split = message.args.split("/")
+            self.__filter_notification(split[0], message.get_data())
         # run the notification on demand
         if message.command == "RUN":
             self.__notify(message.args, message.get_data())
