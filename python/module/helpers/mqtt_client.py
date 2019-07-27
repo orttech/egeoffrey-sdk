@@ -115,7 +115,7 @@ class Mqtt_client():
             except Exception,e:
                 self.__module.log_error("Invalid message received on "+msg.topic+" - "+msg.payload+": "+exception.get(e))
                 return
-            # dispacth the message
+            # dispatch the message
             try:
                 # identify the subscribed topic which caused this message to get here
                 for pattern in self.__topics_subscribed:
@@ -135,7 +135,8 @@ class Mqtt_client():
                             if len(self.__topics_to_wait) > 0:
                                 for req_pattern in self.__topics_to_wait:
                                     if mqtt.topic_matches_sub(req_pattern, message.topic):
-                                        self.__topics_to_wait.remove(message.topic)
+                                        self.__module.log_debug("received configuration "+message.topic)
+                                        self.__topics_to_wait.remove(req_pattern)
                                         # if there are no more topics to wait for, this service is now configured
                                         if len(self.__topics_to_wait) == 0: 
                                             self.__module.log_info("Configuration completed")
@@ -194,7 +195,7 @@ class Mqtt_client():
             # if this is mandatory topic, unconfigure the module and add it to the list of topics to wait for
             self.__topics_to_wait.append(topic)
             self.__module.configured = False
-            self.__module.log_debug("will wait for configuration on "+str(self.__topics_to_wait))
+            self.__module.log_debug("will wait for configuration on "+topic)
         # if connected, subscribe the topic and keep track of it
         if self.__module.connected: 
             if topic in self.__topics_subscribed: return topic

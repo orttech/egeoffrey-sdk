@@ -36,6 +36,8 @@ class Message {
         this.command = ""
         // arguments of the command
         this.args = ""
+        // version of the configuration file
+        this.config_schema = null
         // setup the payload (not directly accessible by the user)
         this.__payload = {}
         this.clear()
@@ -67,7 +69,14 @@ class Message {
         this.recipient = topics[5]+"/"+topics[6]
         this.command = topics[7]
         this.retain = retain
-        this.args = topics.slice(8,topics.length).join("/")
+        this.args = topics.slice(8, topics.length).join("/")
+        // parse configuration version if any
+        if (this.command == "CONF") {
+            var match = this.args.match(/^(\d)\/(.+)$/)
+            if (match == null) throw "configuration version is missing from configuration file "+this.args
+            this.config_schema = parseInt(match[1], 10)
+            this.args = match[2]
+        }
         // null payload (for clearing retain flag)
         if (payload == null) this.is_null = true
         else {
@@ -155,6 +164,7 @@ class Message {
         var content
         if (this.is_null) content = "null"
         else content = JSON.stringify(this.__payload["data"])+" ["+this.__payload["request_id"]+"]"
-        return "Message("+this.sender+" -> "+this.recipient+": "+this.command+" "+this.args+": "+content+")"
+        var version = this.config_schema != null ? "v"+this.config_schema : ""
+        return "Message("+this.sender+" -> "+this.recipient+": "+this.command+" "+this.args+" "+version+": "+content+")"
     }
 }

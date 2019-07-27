@@ -64,8 +64,9 @@ class Module(threading.Thread):
             self.log_error("runtime error during on_init(): "+exception.get(e))
 
     # Add a listener for the given configuration request (will call on_configuration())
-    def add_configuration_listener(self, args, wait_for_it=False):
-        return self.__mqtt.add_listener("controller/config", "*/*", "CONF", args, wait_for_it)
+    def add_configuration_listener(self, args, version=None, wait_for_it=False):
+        filename = args if version is None else str(version)+"/"+args
+        return self.__mqtt.add_listener("controller/config", "*/*", "CONF", filename, wait_for_it)
 
     # add a listener for the messages addressed to this module (will call on_message())
     def add_request_listener(self, from_module, command, args):
@@ -90,9 +91,13 @@ class Module(threading.Thread):
         if message.sender == "" or message.recipient == "": 
             self.log_warning("invalid message to send", False)
             return
-        # publish it to the message bus
+        # prepare config version if any
+        if message.config_schema is not None:
+            message.args = str(message.config_schema)+"/"+message.args
+        # prepare payload
         if message.is_null: payload = None 
         else: payload = message.get_payload()
+        # publish it to the message bus
         self.__mqtt.publish(message.recipient, message.command, message.args, payload, message.retain)
         
     # log a message
@@ -124,23 +129,15 @@ class Module(threading.Thread):
     # handle error logs
     def log_error(self, text, allow_remote_logging=True):
         self.__log("error", text, allow_remote_logging)
-        
+
     # ensure all the items of an array of settings are included in the configuration object provided
-    def __is_valid_configuration(self, settings, configuration):
+    def is_valid_configuration(self, settings, configuration):
         if not isinstance(configuration, dict): return False
         for item in settings:
             if not item in configuration or configuration[item] is None: 
                 self.log_warning("Invalid configuration received, "+item+" missing in "+str(configuration))
                 return False
         return True
-
-    # ensure the configuration provided contains all the required settings, if not, unconfigure the module
-    def is_valid_module_configuration(self, settings, configuration):
-        return self.__is_valid_configuration(settings, configuration)
-
-    # ensure the configuration provided contains all the required settings
-    def is_valid_configuration(self, settings, configuration):
-        return self.__is_valid_configuration(settings, configuration)
     
     # wrap around time sleep so to break if the module is stopping
     def sleep(self, sleep_time):
@@ -151,7 +148,26 @@ class Module(threading.Thread):
             if self.stopping: break
             time.sleep(step)
             slept = slept+step
-        
+            
+    # upgrade a configuration file to the given version
+    def upgrade_config(self, filename, from_version, to_version, content):
+        # delete the old configuration file first
+        message = Message(self)
+        message.recipient = "controller/config"
+        message.command = "DELETE"
+        message.args = filename
+        message.config_schema = from_version
+        self.send(message)
+        # save the new version
+        message = Message(self)
+        message.recipient = "controller/config"
+        message.command = "SAVE"
+        message.args = filename
+        message.config_schema = to_version
+        message.set_data(content)
+        self.send(message)
+        self.log_info("Requesting to upgrade configuration "+filename+" from v"+str(from_version)+" to v"+str(to_version))
+    
     # run the module, called when starting the thread
     def run(self):
         build = " (build "+self.build+")" if self.build is not None else ""
@@ -160,8 +176,6 @@ class Module(threading.Thread):
         self.__mqtt.start()
         # subscribe to any request addressed to this module  
         self.add_request_listener("+/+", "+", "#")
-        # subscribe to any configuration aimed for this module  
-        self.add_configuration_listener(self.fullname)
         # tell everybody this module has started
         message = Message(self)
         message.recipient = "*/*"
