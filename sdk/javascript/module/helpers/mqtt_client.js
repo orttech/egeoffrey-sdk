@@ -136,8 +136,9 @@ class Mqtt_client {
                             if (this_class.__topics_to_wait.length > 0) {
                                 for (var req_pattern of this_class.__topics_to_wait) {
                                     if (topic_matches_sub(req_pattern, message.topic)) {
-                                        var index = this_class.__topics_to_wait.indexOf(message.topic)
-                                        this_class.__topics_to_wait.splice(index,1)
+                                        this_class.__module.log_debug("received configuration "+message.topic)
+                                        var index = this_class.__topics_to_wait.indexOf(req_pattern)
+                                        this_class.__topics_to_wait.splice(index, 1)
                                         // if there are no more topics to wait for, start the module
                                         if (this_class.__topics_to_wait.length == 0) { 
                                             this_class.__module.log_debug("Configuration completed for "+this_class.__module.fullname+", starting the module...")
@@ -204,7 +205,7 @@ class Mqtt_client {
             if (wait_for_it) {
                 this.__topics_to_wait.push(topic)
                 this.__module.configured = false
-                this.__module.log_debug("will wait for configuration on "+JSON.stringify(this.__topics_to_wait))
+                this.__module.log_debug("will wait for configuration on "+topic)
             }
         } 
         // subscribe the topic and keep track of it

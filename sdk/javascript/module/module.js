@@ -41,8 +41,9 @@ class Module {
         
     }
     // Add a listener for the given configuration request (will call on_configuration())
-    add_configuration_listener(args, wait_for_it=false) {
-        return this.__mqtt.add_listener("controller/config", "*/*", "CONF", args, wait_for_it)
+    add_configuration_listener(args, version=null, wait_for_it=false) {
+        var filename = version == null ? args : version+"/"+args
+        return this.__mqtt.add_listener("controller/config", "*/*", "CONF", filename, wait_for_it)
     }
     
     // add a listener for the messages addressed to this module (will call on_message())
@@ -73,10 +74,13 @@ class Module {
             this.log_warning("invalid message to send", false)
             return 
         }
-        // publish it to the message bus
+        // prepare config version if any
+        if (message.config_schema != null) message.args = message.config_schema+"/"+message.args
+        // prepare payload
         var payload
         if (message.is_null) payload = null
         else payload = message.get_payload()
+        // publish it to the message bus
         this.__mqtt.publish(message.recipient, message.command, message.args, payload, message.retain)
     }
 
@@ -116,8 +120,7 @@ class Module {
     }
     
     // ensure all the items of the array of settings are included in the configuration object provided
-    __is_valid_configuration(settings, configuration) {
-        if (configuration.constructor != Object) return false
+    is_valid_configuration(settings, configuration) {
         for (var item of settings) {
             if (! (item in configuration) || configuration[item] == null) { 
                 this.log_warning("Invalid configuration received, "+item+" missing in "+JSON.stringify(configuration))
@@ -127,14 +130,24 @@ class Module {
         return true
     }
     
-    // ensure the configuration provided contains all the required settings, if not, unconfigure the module
-    is_valid_module_configuration(settings, configuration) {
-        return this.__is_valid_configuration(settings, configuration)
-    }
-
-    // ensure the configuration provided contains all the required settings
-    is_valid_configuration(settings, configuration) {
-        return this.__is_valid_configuration(settings, configuration)
+    // upgrade a configuration file to the given version
+    upgrade_config(filename, from_version, to_version, content) {
+        // delete the old configuration file first
+        message = Message(self)
+        message.recipient = "controller/config"
+        message.command = "DELETE"
+        message.args = filename
+        message.config_schema = from_version
+        this.send(message)
+        // save the new version
+        message = Message(self)
+        message.recipient = "controller/config"
+        message.command = "SAVE"
+        message.args = filename
+        message.config_schema = to_version
+        message.set_data(content)
+        this.send(message)
+        this.log_info("Requesting to upgrade configuration "+filename+" from v"+from_version+" to v"+to_version)
     }
     
     // run the module, called when starting the thread
@@ -144,8 +157,6 @@ class Module {
         this.__mqtt.start()
         // subscribe to any request addressed to this module  
         this.add_request_listener("+/+", "+", "#")
-        // subscribe to any configuration aimed for this module  
-        this.add_configuration_listener(this.fullname)
         // run the user's callback if configured, otherwise will be started once all the required configuration will be received
         if (this.configured) {
             try {

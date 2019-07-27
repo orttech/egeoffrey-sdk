@@ -32,9 +32,12 @@ class Watchdog(Module):
         except Exception,e: 
             print "invalid manifest file in "+manifest_file+" - "+exception.get(e)
             sys.exit(1)
-        for setting in ["package", "revision", "version", "github", "dockerhub", "modules"]:
+        for setting in ["manifest_schema", "package", "revision", "version", "github", "dockerhub", "modules"]:
             if setting not in manifest:
                 print setting+" is missing from manifest"
+                sys.exit(1)
+        if manifest["manifest_schema"] != 1:
+                print "Unsupported manifest schema v"+str(manifest["manifest_schema"])
                 sys.exit(1)
         # embed default config into the manifest
         manifest["default_config"] = self.load_default_config()
@@ -217,10 +220,9 @@ class Watchdog(Module):
             self.start_module(entry)
             self.sleep(0.1)
         self.sleep(60)
-        # loop forever, pinging the managed modules from time to time
+        # loop forever
         while True:
-            self.ping()
-            self.sleep(5*60)
+            self.sleep(10)
         
     # What to do when shutting down
     def on_stop(self):

@@ -6,6 +6,7 @@
 import json
 import random
 import copy
+import re
 
 import sdk.python.constants as constants
 import sdk.python.utils.exceptions as exception
@@ -40,6 +41,8 @@ class Message():
         self.command = ""
         # arguments of the command
         self.args = ""
+        # version of the configuration file
+        self.config_schema = None
         # setup the payload (not directly accessible by the user)
         self.__payload = {}
         self.clear()
@@ -62,7 +65,7 @@ class Message():
         # split the topic
         topics = topic.split("/")
         # sanity check
-        if len(topics) < 8: 
+        if len(topics) < 8:
             raise Exception("missing required information in topic")
         if topics[0] != "myHouse" or topics[1] != constants.API_VERSION: 
             raise Exception("invalid api call")
@@ -75,6 +78,13 @@ class Message():
         self.command = topics[7]
         self.args = "/".join(topics[8:])
         self.retain = retain
+        # parse configuration version if any
+        if self.command == "CONF":
+            match = re.match("^(\d)\/(.+)$", self.args)
+            if match is None: 
+                raise Exception("configuration version is missing from configuration file "+self.args)
+            self.config_schema = int(match.groups()[0])
+            self.args  = match.groups()[1]
         # null payload (for clearing retain flag)
         if payload is None or payload == "":
             self.is_null = True
@@ -148,4 +158,5 @@ class Message():
     def dump(self):
         if self.is_null: content = "null"
         else: content = str(self.__payload["data"])+" ["+str(self.__payload["request_id"])+"]"
-        return "Message("+self.sender+" -> "+self.recipient+": "+self.command+" "+self.args+": "+content+")"
+        version = "v"+str(self.config_schema) if self.config_schema is not None else ""
+        return "Message("+self.sender+" -> "+self.recipient+": "+self.command+" "+self.args+" "+version+": "+content+")"
