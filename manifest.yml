@@ -1,7 +1,8 @@
-manifest_schema: 1
+manifest_schema: 2
 package: myhouse-sdk
-revision: 8
-version: development
+revision: 9
+version: 1.0
+branch: development
 github: myhouse-project/myhouse-sdk
 dockerhub: myhouseproject/myhouse-sdk
 description: 
