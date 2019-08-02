@@ -19,6 +19,8 @@ import sdk.python.utils.exceptions as exception
 class Watchdog(Module):
     # What to do when initializing
     def on_init(self):
+        # variables
+        self.supported_manifest_schema = 2
         # load the manifest file
         self.manifest = None
         manifest_file = "manifest.yml"
@@ -32,15 +34,13 @@ class Watchdog(Module):
         except Exception,e: 
             print "invalid manifest file in "+manifest_file+" - "+exception.get(e)
             sys.exit(1)
-        for setting in ["manifest_schema", "package", "revision", "version", "github", "dockerhub", "modules"]:
+        if manifest["manifest_schema"] != self.supported_manifest_schema:
+                print "Unsupported manifest schema v"+str(manifest["manifest_schema"])
+                sys.exit(1)
+        for setting in ["manifest_schema", "package", "revision", "version", "branch", "github", "dockerhub", "modules"]:
             if setting not in manifest:
                 print setting+" is missing from manifest"
                 sys.exit(1)
-        if manifest["manifest_schema"] != 1:
-                print "Unsupported manifest schema v"+str(manifest["manifest_schema"])
-                sys.exit(1)
-        # embed default config into the manifest
-        manifest["default_config"] = self.load_default_config()
         self.manifest = manifest
         # set watchdog service name
         self.scope = "system"
@@ -115,7 +115,7 @@ class Watchdog(Module):
             # set attributes
             hasher = hashlib.md5()
             hasher.update(repr(imported_module))
-            thread.version = str(self.manifest["version"])+"-"+str(self.manifest["revision"])
+            thread.version = str(self.manifest["version"])+"-"+str(self.manifest["revision"])+" ("+str(self.manifest["branch"])+")"
             thread.build = hasher.hexdigest()[:7]
             thread.daemon = True
             thread.watchdog = self

@@ -1,10 +1,20 @@
 #!/bin/sh
 
+# variables
+SUPPORTED_MANIFEST_SCHEMA=2
+
 # welcome message
 MANIFEST="manifest.yml"
+MANIFEST_SCHEMA=$(yq -r .manifest_schema $MANIFEST)
 SDK_MANIFEST="sdk/manifest.yml"
-MYHOUSE_API_VERSION=$(echo -e "import sdk.python.constants\nprint sdk.python.constants.API_VERSION"|python)
-echo -e "Package "$(yq -r .package $MANIFEST)" "$(yq -r .version $MANIFEST)"-"$(yq -r .revision $MANIFEST)" (SDK "$(yq -r .version $SDK_MANIFEST)"-"$(yq -r .revision $SDK_MANIFEST)" | API "$MYHOUSE_API_VERSION")"
+API_VERSION=$(echo -e "import sdk.python.constants\nprint sdk.python.constants.API_VERSION"|python)
+
+if [ $MANIFEST_SCHEMA != $SUPPORTED_MANIFEST_SCHEMA ]; then
+    echo "ERROR: unsupported manifest schema v"$MANIFEST_SCHEMA
+    exit
+fi
+
+echo -e "Package "$(yq -r .package $MANIFEST)" v"$(yq -r .version $MANIFEST |xargs printf '%.1f')"-"$(yq -r .revision $MANIFEST)" ("$(yq -r .branch $MANIFEST)") | SDK v"$(yq -r .version $SDK_MANIFEST |xargs printf '%.1f')"-"$(yq -r .revision $SDK_MANIFEST)" ("$(yq -r .branch $MANIFEST)") | API "$API_VERSION
 echo -e "Environment settings: MODULES ["$MYHOUSE_MODULES"] | GATEWAY ["$MYHOUSE_GATEWAY_HOSTNAME" "$MYHOUSE_GATEWAY_PORT"] | HOUSE ["$MYHOUSE_ID"]"
 
 # execute myHouse
