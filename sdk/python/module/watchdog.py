@@ -41,10 +41,13 @@ class Watchdog(Module):
             if setting not in manifest:
                 print setting+" is missing from manifest"
                 sys.exit(1)
+        # embed default config into the manifest
+        manifest["default_config"] = self.load_default_config()
         self.manifest = manifest
         # set watchdog service name
         self.scope = "system"
-        self.name = "watchdog_"+self.manifest["package"]+"_"+str(random.randint(1000,9999))
+        # TODO: with random multiple manifests will stay around
+        self.name = "watchdog_"+self.manifest["package"]
         self.fullname = self.scope+"/"+self.name
         # array of modules
         self.modules = [] 
