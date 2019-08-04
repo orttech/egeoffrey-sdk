@@ -47,13 +47,50 @@ function topic_matches_sub(pattern, topic) {
 
 // format a log line for printing
 function format_log_line(severity, module, text) {
-    var now = Date()
-    return "["+now.toLocaleString()+"]["+module+"] "+severity.toUpperCase()+ ": "+truncate(text, 2000)
+    var date = new Date()
+    var day = date.getDate() < 10 ? "0"+date.getDate() : date.getDate()
+    var month = (date.getMonth()+1) < 10 ? "0"+(date.getMonth()+1) : date.getMonth()+1
+    var year = date.getFullYear()
+    var hour = date.getHours() < 10 ? "0"+date.getHours() : date.getHours()
+    var minute = date.getMinutes() < 10 ? "0"+date.getMinutes() : date.getMinutes()
+    var second = date.getSeconds() < 10 ? "0"+date.getSeconds() : date.getSeconds()
+    now = day+"/"+month+"/"+year+" "+hour+":"+minute+":"+second
+    return "["+now+"]["+module+"] "+severity.toUpperCase()+ ": "+truncate(text, 2000)
 }
 
+// format a multiline string by enforcing a maximum length
 function format_multiline(string, length) {
-    if (string == null) return ""
-    var match = string.match(new RegExp('.{1,' + length + '}', 'g'))
-    if (match == null) return ""
-    return string.match(new RegExp('.{1,' + length + '}', 'g')).join("<br>")
+    string = string.replace(/<br>/g, '\n')
+    var output = []
+    var lines = string.split("\n")
+    for (line of lines) {
+        var curr = length
+        var prev = 0
+        while (line[curr]) {
+            if (line[curr++] == ' ') {
+                output.push(line.substring(prev,curr))
+                prev = curr
+                curr += length
+            }
+        }
+        output.push(line.substr(prev))
+    }
+    return output.join("<br>")
+}
+
+// escape html special characters in a string
+function escape_html(string) {
+    var entityMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '/': '&#x2F;',
+      '`': '&#x60;',
+      '=': '&#x3D;'
+    }
+    return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+        return entityMap[s]
+    })
 }

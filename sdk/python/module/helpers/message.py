@@ -4,7 +4,8 @@
 # Python: 
 
 import json
-import random
+import os
+import struct
 import copy
 import re
 
@@ -21,7 +22,7 @@ class Message():
             
     # generate and set a request_id
     def __add_request_id(self):
-        self.__payload["request_id"] = random.randint(1,100000)
+        self.__payload["request_id"] = struct.unpack("<L", os.urandom(4))[0]
     
     # clone an object
     def __clone(self, object):
