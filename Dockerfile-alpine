@@ -9,7 +9,7 @@ ENV WORKDIR=/myHouse
 WORKDIR $WORKDIR
 
 ### install dependencies
-RUN apk update && apk add jq nano && rm -rf /var/cache/apk/*
+RUN apk update && apk add jq nano tzdata && rm -rf /var/cache/apk/*
 RUN pip install paho-mqtt requests tinynumpy pyyaml yq
 
 ### install myHouse SDK

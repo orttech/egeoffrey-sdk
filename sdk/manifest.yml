@@ -1,6 +1,6 @@
 manifest_schema: 2
 package: myhouse-sdk
-revision: 11
+revision: 12
 version: 1.0
 branch: development
 github: myhouse-project/myhouse-sdk
