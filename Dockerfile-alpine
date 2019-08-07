@@ -1,20 +1,20 @@
-### MYHOUSE ###
+### EGEOFFREY ###
 
 ### define base image
 ARG ARCHITECTURE
 FROM $ARCHITECTURE/python:2.7-alpine
 
 ### define workdir
-ENV WORKDIR=/myHouse
+ENV WORKDIR=/eGeoffrey
 WORKDIR $WORKDIR
 
 ### install dependencies
 RUN apk update && apk add jq nano tzdata && rm -rf /var/cache/apk/*
 RUN pip install paho-mqtt requests tinynumpy pyyaml yq
 
-### install myHouse SDK
+### install eGeoffrey SDK
 COPY . $WORKDIR
 
 ### define entrypoint
 ENTRYPOINT ["sh", "docker/docker-entrypoint.sh"]
-CMD ["myhouse"]
+CMD ["egeoffrey"]

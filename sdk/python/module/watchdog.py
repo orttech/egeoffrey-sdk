@@ -53,7 +53,7 @@ class Watchdog(Module):
         self.modules = [] 
         # map module fullname with thread
         self.threads = {}
-        self.parse_modules(os.getenv("MYHOUSE_MODULES", None))
+        self.parse_modules(os.getenv("EGEOFFREY_MODULES", None))
         # register a handler for SIGINT so to stop all the running threads cleanly
         signal.signal(signal.SIGINT, self.interrupt_handler)
         # subscribe for module discovery requests
@@ -73,7 +73,7 @@ class Watchdog(Module):
         input = input.replace(" ","")
         input = input.replace("\t","")
         list = input.split(",")
-        # MYHOUSE_MODULESS format: package1/file1[=alias1],package2/file2[=alias2] etc.
+        # EGEOFFREY_MODULESS format: package1/file1[=alias1],package2/file2[=alias2] etc.
         for entry in list: 
             # keep track of the alias if provided (package/file=alias)
             if "=" in entry: 

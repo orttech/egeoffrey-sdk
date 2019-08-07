@@ -62,7 +62,7 @@ class Message {
         var topics = topic.split("/")
         // sanity check
         if (topics.legth  < 8) throw "missing required information in topic"
-        if (topics[0] != "myHouse" || topics[1] != constants["API_VERSION"]) throw "invalid api call"
+        if (topics[0] != "eGeoffrey" || topics[1] != constants["API_VERSION"]) throw "invalid api call"
         this.topic = topic
         this.house_id = topics[2]
         this.sender = topics[3]+"/"+topics[4]

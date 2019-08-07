@@ -1,10 +1,10 @@
 manifest_schema: 2
-package: myhouse-sdk
-revision: 12
+package: egeoffrey-sdk
+revision: 13
 version: 1.0
 branch: development
-github: myhouse-project/myhouse-sdk
-dockerhub: myhouseproject/myhouse-sdk
+github: egeoffrey/egeoffrey-sdk
+dockerhub: egeoffrey/egeoffrey-sdk
 description: 
 tags: 
 modules: []

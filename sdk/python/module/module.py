@@ -32,22 +32,22 @@ class Module(threading.Thread):
         self.version = None
         self.build = None
         # gateway settings
-        self.gateway_hostname = os.getenv("MYHOUSE_GATEWAY_HOSTNAME", "myhouse-gateway")
-        self.gateway_port = int(os.getenv("MYHOUSE_GATEWAY_PORT", 443))
-        self.gateway_transport = os.getenv("MYHOUSE_GATEWAY_TRANSPORT", "websockets")
-        self.gateway_ssl = bool(int(os.getenv("MYHOUSE_GATEWAY_SSL", False)))
-        self.gateway_ca_cert = os.getenv("MYHOUSE_GATEWAY_CA_CERT", None)
-        self.gateway_certfile = os.getenv("MYHOUSE_GATEWAY_CERTFILE", None)
-        self.gateway_keyfile = os.getenv("MYHOUSE_GATEWAY_KEYFILE", None)
+        self.gateway_hostname = os.getenv("EGEOFFREY_GATEWAY_HOSTNAME", "egeoffrey-gateway")
+        self.gateway_port = int(os.getenv("EGEOFFREY_GATEWAY_PORT", 443))
+        self.gateway_transport = os.getenv("EGEOFFREY_GATEWAY_TRANSPORT", "websockets")
+        self.gateway_ssl = bool(int(os.getenv("EGEOFFREY_GATEWAY_SSL", False)))
+        self.gateway_ca_cert = os.getenv("EGEOFFREY_GATEWAY_CA_CERT", None)
+        self.gateway_certfile = os.getenv("EGEOFFREY_GATEWAY_CERTFILE", None)
+        self.gateway_keyfile = os.getenv("EGEOFFREY_GATEWAY_KEYFILE", None)
         # house settings
-        self.house_id = os.getenv("MYHOUSE_ID", "default_house")
-        self.house_passcode = os.getenv("MYHOUSE_PASSCODE", "")
+        self.house_id = os.getenv("EGEOFFREY_ID", "default_house")
+        self.house_passcode = os.getenv("EGEOFFREY_PASSCODE", "")
         # debug
-        self.debug = bool(int(os.getenv("MYHOUSE_DEBUG", False)))
-        self.verbose = bool(int(os.getenv("MYHOUSE_VERBOSE", False)))
+        self.debug = bool(int(os.getenv("EGEOFFREY_DEBUG", False)))
+        self.verbose = bool(int(os.getenv("EGEOFFREY_VERBOSE", False)))
         # logging
-        self.logging_remote = bool(int(os.getenv("MYHOUSE_LOGGING_REMOTE", True)))
-        self.logging_local = bool(int(os.getenv("MYHOUSE_LOGGING_LOCAL", True)))
+        self.logging_remote = bool(int(os.getenv("EGEOFFREY_LOGGING_REMOTE", True)))
+        self.logging_local = bool(int(os.getenv("EGEOFFREY_LOGGING_LOCAL", True)))
         # status
         self.connected = False
         self.configured = True # by default no configuration is required to start

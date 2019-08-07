@@ -1,19 +1,19 @@
-### MYHOUSE ###
+### EGEOFFREY ###
 
 ### define base image
 FROM resin/rpi-raspbian
 
 ### define workdir
-ENV WORKDIR=/myHouse 
+ENV WORKDIR=/eGeoffrey 
 WORKDIR $WORKDIR
 
 ### install dependencies
 RUN apt-get update && apt-get install -y jq nano curl wget unzip python-pip expect net-tools usbutils raspi-config raspi-gpio wiringpi libraspberrypi-bin libusb-1.0.0-dev build-essential autoconf cmake pkg-config libtool python-dev libyaml-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN pip install paho-mqtt requests tinynumpy pyyaml yq
 
-### install myHouse SDK
+### install eGeoffrey SDK
 COPY . $WORKDIR
 
 ### define entrypoint
 ENTRYPOINT ["bash", "docker/docker-entrypoint.sh"]
-CMD ["myhouse"]
+CMD ["egeoffrey"]

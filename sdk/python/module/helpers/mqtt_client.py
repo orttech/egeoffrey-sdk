@@ -49,10 +49,10 @@ class Mqtt_client():
         self.__module.log_debug("Subscribing topic "+topic)
         self.__gateway.subscribe(topic, qos=qos)
         
-    # Build the full topic (e.g. myhouse/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
+    # Build the full topic (e.g. egeoffrey/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
     def __build_topic(self, from_module, to_module, command, args):
         if args == "": args = "null"
-        return "/".join(["myHouse", constants.API_VERSION, self.__module.house_id, from_module, to_module, command, args])
+        return "/".join(["eGeoffrey", constants.API_VERSION, self.__module.house_id, from_module, to_module, command, args])
 
     # publish a given topic 
     def publish(self, to_module, command, args, payload_data, retain=False):
@@ -76,8 +76,8 @@ class Mqtt_client():
     
     # called from module. Connect to the MQTT broker and subscribe to the requested topics
     def start(self):
-        # set client id. Format: myhouse-<house_id>-<scope>-<name>
-        self.__client_id = "-".join(["myhouse", self.__module.house_id, self.__module.scope, self.__module.name])
+        # set client id. Format: egeoffrey-<house_id>-<scope>-<name>
+        self.__client_id = "-".join(["egeoffrey", self.__module.house_id, self.__module.scope, self.__module.name])
         # get an instance of the MQTT client object
         self.__gateway = mqtt.Client(client_id=self.__client_id, clean_session=True, userdata=None, transport=self.__module.gateway_transport)
         # define what to do upon connect

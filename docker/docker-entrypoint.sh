@@ -15,16 +15,16 @@ if [ $MANIFEST_SCHEMA != $SUPPORTED_MANIFEST_SCHEMA ]; then
 fi
 
 echo -e "Package "$(yq -r .package $MANIFEST)" v"$(yq -r .version $MANIFEST |xargs printf '%.1f')"-"$(yq -r .revision $MANIFEST)" ("$(yq -r .branch $MANIFEST)") | SDK v"$(yq -r .version $SDK_MANIFEST |xargs printf '%.1f')"-"$(yq -r .revision $SDK_MANIFEST)" ("$(yq -r .branch $MANIFEST)") | API "$API_VERSION
-echo -e "Environment settings: MODULES ["$MYHOUSE_MODULES"] | GATEWAY ["$MYHOUSE_GATEWAY_HOSTNAME" "$MYHOUSE_GATEWAY_PORT"] | HOUSE ["$MYHOUSE_ID"]"
+echo -e "Environment settings: MODULES ["$EGEOFFREY_MODULES"] | GATEWAY ["$EGEOFFREY_GATEWAY_HOSTNAME" "$EGEOFFREY_GATEWAY_PORT"] | HOUSE ["$EGEOFFREY_ID"]"
 
-# execute myHouse
-if [ "$1" = 'myhouse' ]; then
+# execute eGeoffrey
+if [ "$1" = 'egeoffrey' ]; then
     # run user setup script if found
     if [ -f "./docker/docker-init.sh" ]; then 
         echo -e "Running init script..."
         ./docker/docker-init.sh
     fi
-    # start myHouse watchdog service
+    # start eGeoffrey watchdog service
     echo -e "Starting watchdog..."
     exec python -m sdk.python.module.start
 fi
