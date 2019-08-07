@@ -11,18 +11,18 @@ class Module {
         this.version = null
         this.build = null
         // gateway settings
-        this.gateway_hostname = "MYHOUSE_GATEWAY_HOSTNAME" in window ? window.MYHOUSE_GATEWAY_HOSTNAME : "localhost"
-        this.gateway_port = "MYHOUSE_GATEWAY_PORT" in window ? window.MYHOUSE_GATEWAY_PORT : 443
-        this.gateway_ssl = "MYHOUSE_GATEWAY_SSL" in window ? Boolean(window.MYHOUSE_GATEWAY_SSL) : false
+        this.gateway_hostname = "EGEOFFREY_GATEWAY_HOSTNAME" in window ? window.EGEOFFREY_GATEWAY_HOSTNAME : "localhost"
+        this.gateway_port = "EGEOFFREY_GATEWAY_PORT" in window ? window.EGEOFFREY_GATEWAY_PORT : 443
+        this.gateway_ssl = "EGEOFFREY_GATEWAY_SSL" in window ? Boolean(window.EGEOFFREY_GATEWAY_SSL) : false
         // house settings
-        this.house_id = "MYHOUSE_ID" in window ? window.MYHOUSE_ID : "default_house"
-        this.house_passcode = "MYHOUSE_PASSCODE" in window ? window.MYHOUSE_PASSCODE : ""
+        this.house_id = "EGEOFFREY_ID" in window ? window.EGEOFFREY_ID : "default_house"
+        this.house_passcode = "EGEOFFREY_PASSCODE" in window ? window.EGEOFFREY_PASSCODE : ""
         // debug
-        this.debug = "MYHOUSE_DEBUG" in window ? Boolean(window.MYHOUSE_DEBUG) : 0
-        this.verbose = "MYHOUSE_VERBOSE" in window ? Boolean(window.MYHOUSE_VERBOSE) : 0
+        this.debug = "EGEOFFREY_DEBUG" in window ? Boolean(window.EGEOFFREY_DEBUG) : 0
+        this.verbose = "EGEOFFREY_VERBOSE" in window ? Boolean(window.EGEOFFREY_VERBOSE) : 0
         // logging
-        this.logging_remote = "MYHOUSE_LOGGING_REMOTE" in window ? Boolean(window.MYHOUSE_LOGGING_REMOTE) : false
-        this.logging_local = "MYHOUSE_LOGGING_LOCAL" in window ? Boolean(window.MYHOUSE_LOGGING_LOCAL) : true
+        this.logging_remote = "EGEOFFREY_LOGGING_REMOTE" in window ? Boolean(window.EGEOFFREY_LOGGING_REMOTE) : false
+        this.logging_local = "EGEOFFREY_LOGGING_LOCAL" in window ? Boolean(window.EGEOFFREY_LOGGING_LOCAL) : true
         // status
         this.connected = false
         this.configured = true // by default no configuration is required to start

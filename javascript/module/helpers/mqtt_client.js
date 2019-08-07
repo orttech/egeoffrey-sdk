@@ -19,7 +19,7 @@ class Mqtt_client {
     __connect() {
         var this_class = this
         var __on_connect = function(reconnect, url) {
-            this_class.__module.log_info("Connected to myHouse gateway "+this_class.__module.gateway_hostname+":"+this_class.__module.gateway_port)
+            this_class.__module.log_info("Connected to eGeoffrey gateway "+this_class.__module.gateway_hostname+":"+this_class.__module.gateway_port)
             this_class.__module.connected = true
             this_class.__module.on_connect()
             // subscribe to the requested topics
@@ -62,10 +62,10 @@ class Mqtt_client {
         this.__gateway.subscribe(topic, {"qos": qos})
     }
     
-    // Build the full topic (e.g. myhouse/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
+    // Build the full topic (e.g. egeoffrey/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
     __build_topic(from_module, to_module, command, args) {
         if (args == "") args = "null"
-        return ["myHouse", constants["API_VERSION"], this.__module.house_id, from_module, to_module, command, args].join("/")
+        return ["eGeoffrey", constants["API_VERSION"], this.__module.house_id, from_module, to_module, command, args].join("/")
     }
     
     // publish payload to a given topic (queue the message while offline)
@@ -91,8 +91,8 @@ class Mqtt_client {
     
     // connect to the MQTT broker and subscribed to the requested topics
     start() {
-        // set client id . Format: myhouse-<house_id>-<scope>-<name>
-        this.__client_id = ["myhouse", this.__module.house_id, this.__module.scope, this.__module.name].join("-")
+        // set client id . Format: egeoffrey-<house_id>-<scope>-<name>
+        this.__client_id = ["egeoffrey", this.__module.house_id, this.__module.scope, this.__module.name].join("-")
         // get an instance of the MQTT client
         this.__gateway = new Paho.MQTT.Client(this.__module.gateway_hostname, Number(this.__module.gateway_port), this.__client_id);
         // define what to do upon connect

@@ -17,7 +17,7 @@ def is_number(s):
         
 # normalize the value. If the input is a number, keep a single digit, otherwise return a string
 def normalize(value, format=None):
-    if format == "image" or format == "calendar" or format == "position": return value
+    if format == "image" or format == "calendar" or format == "position" or format == "tasks": return value
     if value == "None": return "None"
     if format is None:
         return float("{0:.1f}".format(float(value))) if is_number(value) else str(value)
