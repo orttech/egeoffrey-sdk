@@ -295,13 +295,16 @@ class Watchdog(Module):
             self.log_debug("Received ping reply from "+module["fullname"]+": "+str(module["ping"])+"ms")
             return
         # reply with the list of managed modules and their status
-        elif message.command == "DISCOVER" and message.args == "req":
+        elif message.command == "DISCOVER":
+            # prevent loops
+            if message.sender.startswith("system/watchdog"): return
+            # reply to the discovery request
             self.log_debug("requested module discovery from "+message.sender)
-            message = Message(self)
-            message.recipient = "*/*"
-            message.command = "DISCOVER"
-            message.args = "res"
+            message.reply()
+            # for each managed module
             for module in self.modules:
+                # if requested a specific module, skip the others
+                if message.args != "*" and module["fullname"] != message.args: continue
                 module["debug"] = self.threads[module["fullname"]].debug
                 module["version"] = self.threads[module["fullname"]].version
                 module["build"] = self.threads[module["fullname"]].build
