@@ -21,44 +21,75 @@ class Watchdog(Module):
     def on_init(self):
         # variables
         self.supported_manifest_schema = 2
-        # load the manifest file
-        self.manifest = None
-        manifest_file = "manifest.yml"
-        if not os.path.isfile(manifest_file): 
-            print "Manifest not found, refusing to start"
-            sys.exit(1)
-        with open(manifest_file) as f: content = f.read()
-        # ensure the manifest is valid
+        # load this package manifest file
         try:
-            manifest = yaml.load(content, Loader=yaml.SafeLoader)
+            self.manifest = self.get_manifest("manifest.yml")
         except Exception,e: 
-            print "invalid manifest file in "+manifest_file+" - "+exception.get(e)
+            print exception.get(e)
             sys.exit(1)
-        if manifest["manifest_schema"] != self.supported_manifest_schema:
-                print "Unsupported manifest schema v"+str(manifest["manifest_schema"])
+        # embed sdk manifest
+        try:
+            self.manifest["sdk"] = self.get_manifest("sdk/manifest.yml")
+        except Exception,e: 
+            print exception.get(e)
+            sys.exit(1)
+        # apply sdk requirements if any
+        if "minimum_sdk_version" in self.manifest:
+            split = str(self.manifest["minimum_sdk_version"]).split("-")
+            minimum_version = float(split[0])
+            minimum_revision = int(split[1]) if len(split) == 2 else None
+            if self.manifest["sdk"]["version"] < minimum_version or (minimum_revision is not None and self.manifest["sdk"]["version"] == minimum_version and self.manifest["sdk"]["revision"] < minimum_revision):
+                print "sdk v"+str(self.manifest["sdk"]["version"])+"-"+str(self.manifest["sdk"]["revision"])+" is below the minimum required version "+str(self.manifest["minimum_sdk_version"])
                 sys.exit(1)
-        for setting in ["manifest_schema", "package", "revision", "version", "branch", "github", "dockerhub", "modules"]:
-            if setting not in manifest:
-                print setting+" is missing from manifest"
-                sys.exit(1)
-        # embed default config into the manifest
-        manifest["default_config"] = self.load_default_config()
-        self.manifest = manifest
         # set watchdog service name
         self.scope = "system"
-        # TODO: with random multiple manifests will stay around
-        self.name = "watchdog_"+self.manifest["package"]
+        # attach signature to watchdog name. Allows running multiple instances of the same package with a different runtime configuration
+        self.name = "watchdog-"+self.manifest["package"]+"-"+self.get_runtime_signature()
         self.fullname = self.scope+"/"+self.name
-        # array of modules
-        self.modules = [] 
+        # array of modules and alias map
+        self.modules = []
+        self.aliases = {}
         # map module fullname with thread
         self.threads = {}
         self.parse_modules(os.getenv("EGEOFFREY_MODULES", None))
+        # if aliases are used, alter the manifest and rename the module's name in the modules array
+        for i in range(len(self.manifest["modules"])):
+            for module_name in self.manifest["modules"][i]:
+                if module_name in self.aliases:
+                    self.manifest["modules"][i][self.aliases[module_name]] = self.manifest["modules"][i][module_name]
+                    del self.manifest["modules"][i][module_name]
+        # embed default config into the manifest
+        self.manifest["default_config"] = self.load_default_config()
         # register a handler for SIGINT so to stop all the running threads cleanly
         signal.signal(signal.SIGINT, self.interrupt_handler)
         # subscribe for module discovery requests
         self.add_broadcast_listener("+/+","DISCOVER","#")
     
+    # read and return a manifest file. Raise exception on error
+    def get_manifest(self, manifest_file):
+        if not os.path.isfile(manifest_file):
+            raise Exception(manifest_file+" not found")
+        with open(manifest_file) as f: content = f.read()
+        # ensure the manifest is valid
+        try:
+            manifest = yaml.load(content, Loader=yaml.SafeLoader)
+        except Exception,e:
+            raise Exception(manifest_file+" is an invalid manifest:- "+exception.get(e))
+        if manifest["manifest_schema"] != self.supported_manifest_schema:
+                raise Exception(manifest_file+" has an unsupported manifest schema v"+str(manifest["manifest_schema"]))
+        for setting in ["manifest_schema", "package", "revision", "version", "branch", "github", "dockerhub", "modules"]:
+            if setting not in manifest:
+                raise Exception(manifest_file+" is missing setting "+setting)
+        return manifest
+
+    # return a predictable hash for the runtime environment taking into consideration user-provided env variables
+    def get_runtime_signature(self):
+        string = "HASH"
+        for item, value in os.environ.items():
+            if not item in ["EGEOFFREY_GATEWAY_HOSTNAME", "EGEOFFREY_GATEWAY_PORT", "EGEOFFREY_ID", "EGEOFFREY_PASSCODE", "EGEOFFREY_MODULES"]: continue
+            string = string+"|"+item+"="+str(value)
+        return hashlib.sha1(string).hexdigest()[:10]
+
     # return the module entry associated to the fullname provided
     def get_module(self, fullname):
         name = fullname.split("/")
@@ -75,23 +106,30 @@ class Watchdog(Module):
         list = input.split(",")
         # EGEOFFREY_MODULESS format: package1/file1[=alias1],package2/file2[=alias2] etc.
         for entry in list: 
-            # keep track of the alias if provided (package/file=alias)
+            # check if requested to alias the module's name
             if "=" in entry: 
                 package_file, alias = entry.split("=")
             else:
                 package_file = entry
                 alias = None
+            # ensure module name is valid
             if "/" not in package_file: 
                 print "Skipping invalid module "+package_file
                 continue
-            # split the package from the filename (will become scope and module name - unless an alias was provided)
+            # split the package from the filename (will become scope and module name - unless an alias is provided)
             package, file = package_file.split("/") 
+            # keep track of the aliases
+            name = file
+            if alias is not None:
+                self.aliases[package+"/"+file] = package+"/"+alias
+                name = alias
+            # create a module data structure
             module = {
                 "package": package,
                 "file": file,
                 "scope": package,
+                "name": name,
                 "started": False,
-                "name": alias if alias is not None else file,
                 "ping": 0
             }
             module["fullname"] = module["scope"]+"/"+module["name"]
@@ -116,9 +154,9 @@ class Watchdog(Module):
             class_object = getattr(imported_module, classname)
             thread = class_object(entry["scope"], entry["name"])
             # set attributes
+            thread.version = str(self.manifest["version"])+"-"+str(self.manifest["revision"])+" ("+str(self.manifest["branch"])+")"
             hasher = hashlib.md5()
             hasher.update(repr(imported_module))
-            thread.version = str(self.manifest["version"])+"-"+str(self.manifest["revision"])+" ("+str(self.manifest["branch"])+")"
             thread.build = hasher.hexdigest()[:7]
             thread.daemon = True
             thread.watchdog = self
@@ -160,6 +198,7 @@ class Watchdog(Module):
     
     # ping all the modules belonging to this watchdog
     def ping(self):
+        # TODO: move into a dedicated monitoring module
         for module in self.modules:
             # raise a warning if a module becomes unreachable
             if module["ping"] > 10:
@@ -173,6 +212,7 @@ class Watchdog(Module):
             self.send(message)
             self.sleep(1)
             
+    # read out the default config if any, pack it in a data structure and return it
     def load_default_config(self):
         config_dir = "default_config"
         default_config = []
@@ -186,7 +226,11 @@ class Watchdog(Module):
                 name, extension = os.path.splitext(file)
                 if extension != ".yml": continue
                 # remove base configuration dir to build the topic
-                topic = name.replace(config_dir+os.sep,"")
+                topic = name.replace(config_dir+os.sep, "")
+                # if aliases are used, alter the filename if it is matching
+                config_file, config_version = topic.split(".")
+                if config_file in self.aliases:
+                    topic = self.aliases[config_file]+"."+config_version
                 # read the file's content
                 with open(file) as f: content = f.read()
                 # ensure the yaml file is valid
@@ -195,7 +239,7 @@ class Watchdog(Module):
                 except Exception,e: 
                     self.log_warning("configuration file in an invalid YAML format: "+filename+" - "+exception.get(e))
                     continue
-                # update the index with the corresponding hash
+                # keep track of the valid configuration file
                 default_config.append({topic: content})
         return default_config
         

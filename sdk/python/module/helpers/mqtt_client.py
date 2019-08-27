@@ -98,7 +98,7 @@ class Mqtt_client():
                             self.__gateway.publish(entry[0], entry[1], retain=entry[2])
                 else:
                     # unable to connect, retry
-                    self.__module.log_error("Cannot connect: " + connack_string(rc))
+                    self.__module.log_error("Cannot connect: " + mqtt.connack_string(rc))
                     self.__module.connected = False
                     self.__connect()
             except Exception,e:
