@@ -88,8 +88,8 @@ class Module(threading.Thread):
     def send(self, message):
         if self.verbose: self.log_debug("Publishing message "+message.dump(), False)
         # ensure message is valid
-        if message.sender == "" or message.recipient == "": 
-            self.log_warning("invalid message to send", False)
+        if message.sender == "" or message.sender == "*/*" or message.recipient == "": 
+            self.log_warning("invalid message to send: "+message.dump(), False)
             return
         # prepare config version if any
         if message.config_schema is not None:
