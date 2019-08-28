@@ -298,9 +298,7 @@ class Watchdog(Module):
         elif message.command == "DISCOVER":
             # prevent loops
             if message.sender.startswith("system/watchdog"): return
-            # reply to the discovery request
-            self.log_debug("requested module discovery from "+message.sender)
-            message.reply()
+            modules = []
             # for each managed module
             for module in self.modules:
                 # if requested a specific module, skip the others
@@ -309,8 +307,14 @@ class Watchdog(Module):
                 module["version"] = self.threads[module["fullname"]].version
                 module["build"] = self.threads[module["fullname"]].build
                 module["configured"] = self.threads[module["fullname"]].configured
-            message.set_data(self.modules)
-            self.send(message)
+                modules.append(module)
+            if len(modules) > 0:
+                # reply to the discovery request
+                self.log_debug("requested module discovery from "+message.sender)
+                message.reply()
+                message.sender = self.fullname
+                message.set_data(modules)
+                self.send(message)
             return
         # set debug at runtime
         elif message.command == "DEBUG":

@@ -70,8 +70,8 @@ class Module {
     send(message) {
         if (this.verbose) this.log_debug("Publishing message "+message.dump(), false)
         // ensure message is valid
-        if (message.sender == "" || message.recipient == "") {
-            this.log_warning("invalid message to send", false)
+        if (message.sender == "" || message.sender == "*/*" || message.recipient == "") {
+            this.log_warning("invalid message to send: "+message.dump(), false)
             return 
         }
         // prepare config version if any
