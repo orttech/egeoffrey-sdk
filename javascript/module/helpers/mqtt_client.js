@@ -63,13 +63,13 @@ class Mqtt_client {
     }
     
     // Build the full topic (e.g. egeoffrey/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
-    __build_topic(from_module, to_module, command, args) {
+    __build_topic(house_id, from_module, to_module, command, args) {
         if (args == "") args = "null"
-        return ["eGeoffrey", constants["API_VERSION"], this.__module.house_id, from_module, to_module, command, args].join("/")
+        return ["egeoffrey", constants["API_VERSION"], house_id, from_module, to_module, command, args].join("/")
     }
     
     // publish payload to a given topic (queue the message while offline)
-    publish(to_module, command, args, payload_data, retain=false) {
+    publish(house_id, to_module, command, args, payload_data, retain=false) {
         var payload = payload_data
         if (payload != null) payload = JSON.stringify(payload)
         else {
@@ -77,7 +77,7 @@ class Mqtt_client {
             buffer[0] = null
             payload = buffer
         }
-        var topic = this.__build_topic(this.__module.fullname, to_module, command, args)
+        var topic = this.__build_topic(house_id, this.__module.fullname, to_module, command, args)
         if (this.__module.connected) this.__gateway.send(topic, payload, 0, retain=retain)
         else this.__queue.push([topic, payload, retain])
     }
@@ -117,6 +117,11 @@ class Mqtt_client {
                 if (this_class.__module.verbose) this_class.__module.log_debug("Received message "+message.dump(), false)
             } catch (e) {
                 this_class.__module.log_error("Invalid message received on "+msg.destinationName+" - "+msg.payloadString+": "+get_exception(e))
+                return
+            }
+            // ensure this message is for this house
+            if (message.house_id != "*" && message.house_id != this_class.__module.house_id) {
+                this_class.__module.log_warning("received message for the wrong house "+message.house_id+": "+message.dump())
                 return
             }
             try {
@@ -199,7 +204,7 @@ class Mqtt_client {
     
     // add a listener for the given request
     add_listener(from_module, to_module, command, filter, wait_for_it) {
-        var topic = this.__build_topic(from_module, to_module, command, filter)
+        var topic = this.__build_topic("+", from_module, to_module, command, filter)
         if (wait_for_it) {
             // if this is mandatory topic, unconfigure the module and add it to the list of topics to wait for
             if (wait_for_it) {

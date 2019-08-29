@@ -21,6 +21,7 @@ class Watchdog(Module):
     def on_init(self):
         # variables
         self.supported_manifest_schema = 2
+        self.broadcast_manifest = bool(int(os.getenv("EGEOFFREY_BROADCAST_MANIFEST", False)))
         # load this package manifest file
         try:
             self.manifest = self.get_manifest("manifest.yml")
@@ -250,15 +251,16 @@ class Watchdog(Module):
         message.recipient = "*/*"
         message.command = "MANIFEST"
         message.args = self.manifest["package"]
+        if self.broadcast_manifest: message.house_id = "*"
         message.set_null()
         message.retain = True 
         self.send(message)
         # publish the new manifest
-        # TODO: use the manifest to check SDK required version
         message = Message(self)
         message.recipient = "*/*"
         message.command = "MANIFEST"
         message.args = self.manifest["package"]
+        if self.broadcast_manifest: message.house_id = "*"
         message.set_data(self.manifest)
         message.retain = True 
         self.send(message)
@@ -278,6 +280,7 @@ class Watchdog(Module):
         message.recipient = "*/*"
         message.command = "MANIFEST"
         message.args = self.manifest["package"]
+        if self.broadcast_manifest: message.house_id = "*"
         message.set_null()
         message.retain = True 
         self.send(message)

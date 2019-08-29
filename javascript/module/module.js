@@ -70,7 +70,7 @@ class Module {
     send(message) {
         if (this.verbose) this.log_debug("Publishing message "+message.dump(), false)
         // ensure message is valid
-        if (message.sender == "" || message.sender == "*/*" || message.recipient == "") {
+        if (message.sender == "" || message.sender == "*/*" || message.recipient == "" || message.command == "" || message.house_id == "") {
             this.log_warning("invalid message to send: "+message.dump(), false)
             return 
         }
@@ -81,7 +81,7 @@ class Module {
         if (message.is_null) payload = null
         else payload = message.get_payload()
         // publish it to the message bus
-        this.__mqtt.publish(message.recipient, message.command, message.args, payload, message.retain)
+        this.__mqtt.publish(message.house_id, message.recipient, message.command, message.args, payload, message.retain)
     }
 
     // log a message

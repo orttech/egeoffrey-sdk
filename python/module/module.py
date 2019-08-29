@@ -88,7 +88,7 @@ class Module(threading.Thread):
     def send(self, message):
         if self.verbose: self.log_debug("Publishing message "+message.dump(), False)
         # ensure message is valid
-        if message.sender == "" or message.sender == "*/*" or message.recipient == "": 
+        if message.sender == "" or message.sender == "*/*" or message.recipient == "" or message.command == "" or message.house_id == "":
             self.log_warning("invalid message to send: "+message.dump(), False)
             return
         # prepare config version if any
@@ -98,7 +98,7 @@ class Module(threading.Thread):
         if message.is_null: payload = None 
         else: payload = message.get_payload()
         # publish it to the message bus
-        self.__mqtt.publish(message.recipient, message.command, message.args, payload, message.retain)
+        self.__mqtt.publish(message.house_id, message.recipient, message.command, message.args, payload, message.retain)
         
     # log a message
     def __log(self, severity, text, allow_remote_logging):
