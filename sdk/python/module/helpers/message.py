@@ -68,7 +68,7 @@ class Message():
         # sanity check
         if len(topics) < 8:
             raise Exception("missing required information in topic")
-        if topics[0] != "eGeoffrey" or topics[1] != constants.API_VERSION: 
+        if topics[0] != "egeoffrey" or topics[1] != constants.API_VERSION: 
             raise Exception("invalid api call")
         # store original topic (mainly used by mqtt_client to dispatch the message)
         self.topic = topic

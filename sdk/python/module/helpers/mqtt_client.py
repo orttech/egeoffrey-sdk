@@ -50,17 +50,17 @@ class Mqtt_client():
         self.__gateway.subscribe(topic, qos=qos)
         
     # Build the full topic (e.g. egeoffrey/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
-    def __build_topic(self, from_module, to_module, command, args):
+    def __build_topic(self, house_id, from_module, to_module, command, args):
         if args == "": args = "null"
-        return "/".join(["eGeoffrey", constants.API_VERSION, self.__module.house_id, from_module, to_module, command, args])
+        return "/".join(["egeoffrey", constants.API_VERSION, house_id, from_module, to_module, command, args])
 
     # publish a given topic 
-    def publish(self, to_module, command, args, payload_data, retain=False):
+    def publish(self, house_id, to_module, command, args, payload_data, retain=False):
         # serialize the payload in a json format
         payload = payload_data
         if payload is not None: payload = json.dumps(payload)
         # build the topic to publish to
-        topic = self.__build_topic(self.__module.fullname, to_module, command, args)
+        topic = self.__build_topic(house_id, self.__module.fullname, to_module, command, args)
         # publish if connected
         if self.__module.connected:
             info = self.__gateway.publish(topic, payload, retain=retain)
@@ -114,6 +114,10 @@ class Mqtt_client():
                 if self.__module.verbose: self.__module.log_debug("Received message "+message.dump(), False)
             except Exception,e:
                 self.__module.log_error("Invalid message received on "+msg.topic+" - "+msg.payload+": "+exception.get(e))
+                return
+            # ensure this message is for this house
+            if message.house_id != "*" and message.house_id != self.__module.house_id:
+                self.__module.log_warning("received message for the wrong house "+message.house_id+": "+message.dump())
                 return
             # dispatch the message
             try:
@@ -190,7 +194,7 @@ class Mqtt_client():
 
     # add a listener for the given request
     def add_listener(self, from_module, to_module, command, args, wait_for_it):
-        topic = self.__build_topic(from_module, to_module, command, args)
+        topic = self.__build_topic("+", from_module, to_module, command, args)
         if wait_for_it:
             # if this is mandatory topic, unconfigure the module and add it to the list of topics to wait for
             self.__topics_to_wait.append(topic)
