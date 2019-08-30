@@ -45,8 +45,10 @@ class Mqtt_client():
                 self.__module.sleep(10)
 
     # subscribe to a given topic
-    def __subscribe(self, topic, qos=0):
+    def __subscribe(self, topic):
+        qos = 2 if self.__module.persistent_client else 0 
         self.__module.log_debug("Subscribing topic "+topic)
+        self.__gateway.unsubscribe(topic)
         self.__gateway.subscribe(topic, qos=qos)
         
     # Build the full topic (e.g. egeoffrey/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
@@ -63,7 +65,8 @@ class Mqtt_client():
         topic = self.__build_topic(house_id, self.__module.fullname, to_module, command, args)
         # publish if connected
         if self.__module.connected:
-            info = self.__gateway.publish(topic, payload, retain=retain)
+            qos = 2 if self.__module.persistent_client else 0 
+            info = self.__gateway.publish(topic, payload, retain=retain, qos=qos)
         # queue the message if offline
         else:
             self.__queue.put([topic, payload, retain])
@@ -79,7 +82,9 @@ class Mqtt_client():
         # set client id. Format: egeoffrey-<house_id>-<scope>-<name>
         self.__client_id = "-".join(["egeoffrey", self.__module.house_id, self.__module.scope, self.__module.name])
         # get an instance of the MQTT client object
-        self.__gateway = mqtt.Client(client_id=self.__client_id, clean_session=True, userdata=None, transport=self.__module.gateway_transport)
+        if self.__module.persistent_client: self.__module.log_debug("Configuring as persistent mqtt client")
+        clean_session = False if self.__module.persistent_client else True
+        self.__gateway = mqtt.Client(client_id=self.__client_id, clean_session=clean_session, userdata=None, transport=self.__module.gateway_transport)
         # define what to do upon connect
         def __on_connect(client, userdata, flags, rc):
             try:
@@ -95,7 +100,8 @@ class Mqtt_client():
                     if self.__queue.qsize() > 0: 
                         while not self.__queue.empty():
                             entry = self.__queue.get()
-                            self.__gateway.publish(entry[0], entry[1], retain=entry[2])
+                            qos = 2 if self.__module.persistent_client else 0 
+                            self.__gateway.publish(entry[0], entry[1], retain=entry[2], qos=qos)
                 else:
                     # unable to connect, retry
                     self.__module.log_error("Cannot connect: " + mqtt.connack_string(rc))
@@ -106,7 +112,6 @@ class Mqtt_client():
             
         # what to do when receiving a message
         def __on_message(client, userdata, msg):
-            # TODO: what if not intended for this house
             try:
                 # parse the incoming request into a message data structure
                 message = Message()

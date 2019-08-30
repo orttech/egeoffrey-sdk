@@ -54,6 +54,8 @@ class Module(threading.Thread):
         self.stopping = False
         # initialize mqtt client for connecting to the bus
         self.__mqtt = Mqtt_client(self)
+        # make the mqtt client persistent (will buffer messages when offline)
+        self.persistent_client = bool(int(os.getenv("EGEOFFREY_PERSISTENT_CLIENT", False)))
         # initialize session manager
         self.sessions = Session(self)
         # call module implementation of init

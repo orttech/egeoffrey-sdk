@@ -8,6 +8,7 @@ import os
 import struct
 import copy
 import re
+import time
 
 import sdk.python.constants as constants
 import sdk.python.utils.exceptions as exception
@@ -104,6 +105,9 @@ class Message():
     def set(self, key, value):
         if not isinstance(self.__payload["data"], dict): self.__payload["data"] = {}
         self.__payload["data"][key] = value
+        # if this is a value coming from a service add a timestamp if not already provided
+        if self.recipient == "controller/hub" and self.command == "IN" and "timestamp" not in self.__payload["data"]:
+            self.__payload["data"]["timestamp"] = int(time.time())
         
     # set the payload to null
     def set_null(self):
