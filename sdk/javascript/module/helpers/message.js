@@ -98,6 +98,10 @@ class Message {
     set(key, value) {
         if (this.__payload["data"].constructor != Object) this.__payload["data"] = {}
         this.__payload["data"][key] = value
+        // if this is a value coming from a service add a timestamp if not already provided
+        if (this.recipient == "controller/hub" && this.command == "IN" && ! "timestamp" in this.__payload["data"]) {
+            this.__payload["data"]["timestamp"] = Math.floor(Date.now() / 1000)
+        }
     }
     
     // set the payload to null
