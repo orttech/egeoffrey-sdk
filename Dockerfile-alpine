@@ -10,7 +10,7 @@ WORKDIR $WORKDIR
 
 ### install dependencies
 RUN apk update && apk add jq nano tzdata && rm -rf /var/cache/apk/*
-RUN pip install paho-mqtt requests tinynumpy pyyaml yq
+RUN pip install paho-mqtt requests tinynumpy pyyaml yq apscheduler
 
 ### install eGeoffrey SDK
 COPY . $WORKDIR

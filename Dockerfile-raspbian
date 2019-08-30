@@ -9,7 +9,7 @@ WORKDIR $WORKDIR
 
 ### install dependencies
 RUN apt-get update && apt-get install -y jq nano curl wget unzip python-pip expect net-tools usbutils raspi-config raspi-gpio wiringpi libraspberrypi-bin libusb-1.0.0-dev build-essential autoconf cmake pkg-config libtool python-dev libyaml-dev && apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN pip install paho-mqtt requests tinynumpy pyyaml yq
+RUN pip install paho-mqtt requests tinynumpy pyyaml yq apscheduler
 
 ### install eGeoffrey SDK
 COPY . $WORKDIR
