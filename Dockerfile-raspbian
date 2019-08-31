@@ -4,7 +4,7 @@
 FROM resin/rpi-raspbian
 
 ### define workdir
-ENV WORKDIR=/eGeoffrey 
+ENV WORKDIR=/egeoffrey 
 WORKDIR $WORKDIR
 
 ### install dependencies

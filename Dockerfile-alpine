@@ -5,7 +5,7 @@ ARG ARCHITECTURE
 FROM $ARCHITECTURE/python:2.7-alpine
 
 ### define workdir
-ENV WORKDIR=/eGeoffrey
+ENV WORKDIR=/egeoffrey
 WORKDIR $WORKDIR
 
 ### install dependencies

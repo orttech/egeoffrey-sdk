@@ -22,20 +22,21 @@ class MQTTLogHandler(logging.StreamHandler):
         if record.levelname.lower() == "critical": self.__module.log_error(self.format(record))
 
 class Scheduler():
-    def __init__(self, module):
+    def __init__(self, module, size="small"):
         self.__module = module
         self.__started = False
-        # TODO: evaluate the need to increase the threads considering each scheduler is dedicated to each module
         # default values for each job (30s tolerance to avoid missed job and put together multiple queued jobs)
         self.__job_defaults = {
             "coalesce": True,
             "misfire_grace_time": 30
         }
-        # increase the thread pool executor to 20
-        self.__executors = {
-            "default": ThreadPoolExecutor(20),
-            "processpool": ProcessPoolExecutor(10)
-        }
+        self.__executors = {}
+        # increase the thread pool executor to 20 for large schedulers
+        if size =="large":
+            self.__executors = {
+                "default": ThreadPoolExecutor(20),
+                "processpool": ProcessPoolExecutor(10)
+            }
         # create the scheduler which will run each job in background
         self.__scheduler = BackgroundScheduler(job_defaults=self.__job_defaults, executors=self.__executors)
         # setup logging

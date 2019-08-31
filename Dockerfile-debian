@@ -5,7 +5,7 @@ ARG ARCHITECTURE
 FROM $ARCHITECTURE/debian
 
 ### define workdir
-ENV WORKDIR=/eGeoffrey 
+ENV WORKDIR=/egeoffrey 
 WORKDIR $WORKDIR
 
 ### install dependencies
