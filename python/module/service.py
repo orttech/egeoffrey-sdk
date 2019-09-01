@@ -51,7 +51,7 @@ class Service(Module):
         # run the job immediately
         self.__poll_sensor(sensor_id, configuration)
 
-    # register an active/passive sensor
+    # register an pull/push sensor
     def register_sensor(self, message, validate=[]):
         sensor_id = message.args.replace("sensors/","")
         sensor = message.get_data()
@@ -60,17 +60,17 @@ class Service(Module):
         if "disabled" in sensor and sensor["disabled"]: return
         service = message.get("service")
         if not self.is_valid_configuration(["configuration"], service): return
-        # in active mode we need to schedule sensor's polling
-        if service["mode"] == "active":
-            # for active sensors we need a schedule
+        # in pull mode we need to schedule sensor's polling
+        if service["mode"] == "pull":
+            # for pull sensors we need a schedule
             if not self.is_valid_configuration(["schedule"], service): return
             # schedule for polling the sensor
             self.log_debug("Scheduling "+sensor_id+" polling at "+str(service["schedule"])+" with configuration "+str(service["configuration"]))
             self.__add_schedule(sensor_id, service["schedule"], service["configuration"])
-        # in passive mode the sensor will unsolicited generate new measures
-        elif service["mode"] == "passive":
+        # in push mode the sensor will unsolicited generate new measures
+        elif service["mode"] == "push":
             if not self.is_valid_configuration(validate, service["configuration"]): return
-            self.log_info("registered passive sensor "+sensor_id+" with configuration "+str(service["configuration"]))
+            self.log_info("registered push sensor "+sensor_id+" with configuration "+str(service["configuration"]))
         # keep track of the sensor's configuration
         self.sensors[sensor_id] = service["configuration"]
         return sensor_id
@@ -81,7 +81,7 @@ class Service(Module):
         # a sensor has been deleted
         if sensor_id in self.sensors:
             del self.sensors[sensor_id]
-            # remove scheduler if active sensor
+            # remove scheduler if pull sensor
             if sensor_id in self.__jobs:
                 self.__remove_schedule(sensor_id)
         return sensor_id
