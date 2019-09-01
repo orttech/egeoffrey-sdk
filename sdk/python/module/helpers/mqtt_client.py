@@ -46,10 +46,9 @@ class Mqtt_client():
 
     # subscribe to a given topic
     def __subscribe(self, topic):
-        qos = 2 if self.__module.persistent_client else 0 
         self.__module.log_debug("Subscribing topic "+topic)
         self.__gateway.unsubscribe(topic)
-        self.__gateway.subscribe(topic, qos=qos)
+        self.__gateway.subscribe(topic, qos=2)
         
     # Build the full topic (e.g. egeoffrey/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
     def __build_topic(self, house_id, from_module, to_module, command, args):
@@ -65,8 +64,7 @@ class Mqtt_client():
         topic = self.__build_topic(house_id, self.__module.fullname, to_module, command, args)
         # publish if connected
         if self.__module.connected:
-            qos = 2 if self.__module.persistent_client else 0 
-            info = self.__gateway.publish(topic, payload, retain=retain, qos=qos)
+            info = self.__gateway.publish(topic, payload, retain=retain, qos=2)
         # queue the message if offline
         else:
             self.__queue.put([topic, payload, retain])
@@ -100,8 +98,7 @@ class Mqtt_client():
                     if self.__queue.qsize() > 0: 
                         while not self.__queue.empty():
                             entry = self.__queue.get()
-                            qos = 2 if self.__module.persistent_client else 0 
-                            self.__gateway.publish(entry[0], entry[1], retain=entry[2], qos=qos)
+                            self.__gateway.publish(entry[0], entry[1], retain=entry[2], qos=2)
                 else:
                     # unable to connect, retry
                     self.__module.log_error("Cannot connect: " + mqtt.connack_string(rc))

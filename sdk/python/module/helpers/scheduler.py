@@ -24,7 +24,6 @@ class MQTTLogHandler(logging.StreamHandler):
 class Scheduler():
     def __init__(self, module, size="small"):
         self.__module = module
-        self.__started = False
         # default values for each job (30s tolerance to avoid missed job and put together multiple queued jobs)
         self.__job_defaults = {
             "coalesce": True,
@@ -98,24 +97,22 @@ class Scheduler():
     
     # start the scheduler
     def start(self):
-        if not self.__started:
+        if not self.__scheduler.running:
             # listen for errors
             self.__scheduler.add_listener(self.__on_job_missed, apscheduler.events.EVENT_JOB_MISSED)
             self.__scheduler.add_listener(self.__on_job_error, apscheduler.events.EVENT_JOB_ERROR)
             # start the scheduler
             self.__scheduler.start()
-            self.__started = True
         
     # stop the scheduler
     def stop(self):
-        if self.__started: 
+        if self.__scheduler.running:
             self.__scheduler.shutdown()
-            self.__started = False
     
     # add a job (dictionary with all the settings) to the scheduler
     def add_job(self, job):
         # start the scheduler if not running
-        if not self.__started: self.start()
+        self.start()
         # add the new job
         return self.__scheduler.add_job(**job)
         

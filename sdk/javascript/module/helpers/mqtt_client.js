@@ -57,9 +57,9 @@ class Mqtt_client {
     }
     
     // subscribe to a given topic
-    __subscribe(topic, qos=0) {
+    __subscribe(topic) {
         this.__module.log_debug("Subscribing topic "+topic)
-        this.__gateway.subscribe(topic, {"qos": qos})
+        this.__gateway.subscribe(topic, {"qos": 2})
     }
     
     // Build the full topic (e.g. egeoffrey/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
@@ -78,7 +78,7 @@ class Mqtt_client {
             payload = buffer
         }
         var topic = this.__build_topic(house_id, this.__module.fullname, to_module, command, args)
-        if (this.__module.connected) this.__gateway.send(topic, payload, 0, retain=retain)
+        if (this.__module.connected) this.__gateway.send(topic, payload, 2, retain=retain)
         else this.__queue.push([topic, payload, retain])
     }
     
