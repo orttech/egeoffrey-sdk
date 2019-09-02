@@ -36,11 +36,11 @@ class Module(threading.Thread):
         self.gateway_port = int(os.getenv("EGEOFFREY_GATEWAY_PORT", 443))
         self.gateway_transport = os.getenv("EGEOFFREY_GATEWAY_TRANSPORT", "websockets")
         self.gateway_ssl = bool(int(os.getenv("EGEOFFREY_GATEWAY_SSL", False)))
-        self.gateway_ca_cert = os.getenv("EGEOFFREY_GATEWAY_CA_CERT", None)
+        self.gateway_ca_cert = os.getenv("EGEOFFREY_GATEWAY_CA_CERT", "/etc/ssl/certs")
         self.gateway_certfile = os.getenv("EGEOFFREY_GATEWAY_CERTFILE", None)
         self.gateway_keyfile = os.getenv("EGEOFFREY_GATEWAY_KEYFILE", None)
         # house settings
-        self.house_id = os.getenv("EGEOFFREY_ID", "default_house")
+        self.house_id = os.getenv("EGEOFFREY_ID", "house")
         self.house_passcode = os.getenv("EGEOFFREY_PASSCODE", "")
         # debug
         self.debug = bool(int(os.getenv("EGEOFFREY_DEBUG", False)))

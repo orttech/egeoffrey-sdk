@@ -1,6 +1,6 @@
 manifest_schema: 2
 package: egeoffrey-sdk
-revision: 22
+revision: 23
 version: 1.0
 branch: development
 github: egeoffrey/egeoffrey-sdk

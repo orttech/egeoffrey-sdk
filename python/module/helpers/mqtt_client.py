@@ -24,13 +24,13 @@ class Mqtt_client():
         
     # connect to the MQTT broker
     def __connect(self):
-        # setup TLS if needed
-        if self.__module.gateway_ca_cert is not None: 
+        # setup TLS for tcp transport if needed
+        if self.__module.gateway_ssl and self.__module.gateway_transport == "tcp": 
             self.__gateway.tls_set(ca_certs=self.__module.gateway_ca_cert, certfile=self.__module.gateway_certfile, keyfile=self.__module.gateway_keyfile)
             # do not check for certificate validity
             self.__gateway.tls_insecure_set(True)
-        # setup SSL if needed
-        elif self.__module.gateway_ssl:
+        # setup SSL for websocket transport if needed
+        elif self.__module.gateway_ssl and self.__module.gateway_transport == "websockets":
             self.__gateway.tls_set(cert_reqs=ssl.CERT_NONE)
         # try to connect to the gateway until succeeding
         while self.__module.connected == False:
