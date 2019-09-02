@@ -15,7 +15,7 @@ class Module {
         this.gateway_port = "EGEOFFREY_GATEWAY_PORT" in window ? window.EGEOFFREY_GATEWAY_PORT : 443
         this.gateway_ssl = "EGEOFFREY_GATEWAY_SSL" in window ? Boolean(window.EGEOFFREY_GATEWAY_SSL) : false
         // house settings
-        this.house_id = "EGEOFFREY_ID" in window ? window.EGEOFFREY_ID : "default_house"
+        this.house_id = "EGEOFFREY_ID" in window ? window.EGEOFFREY_ID : "house"
         this.house_passcode = "EGEOFFREY_PASSCODE" in window ? window.EGEOFFREY_PASSCODE : ""
         // debug
         this.debug = "EGEOFFREY_DEBUG" in window ? Boolean(window.EGEOFFREY_DEBUG) : 0
@@ -25,7 +25,8 @@ class Module {
         this.logging_local = "EGEOFFREY_LOGGING_LOCAL" in window ? Boolean(window.EGEOFFREY_LOGGING_LOCAL) : true
         // status
         this.connected = false
-        this.configured = true // by default no configuration is required to start
+        // by default no configuration is required to start
+        this.configured = true 
         this.stopping = false
         // initialize mqtt client for connecting to the bus
         this.__mqtt = new Mqtt_client(this)

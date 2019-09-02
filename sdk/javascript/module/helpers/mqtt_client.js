@@ -2,7 +2,6 @@
 
 class Mqtt_client {
     constructor(module) {
-        // TODO: certs
         // we need the module's object to call its methods
         this.__module = module
         // mqtt object
@@ -30,16 +29,22 @@ class Mqtt_client {
             // there are message in the queue, send them
             if (this_class.__queue.length > 0) { 
                 for (var entry of this_class.__queue) {
-                    this_class.__gateway.send(entry[0], entry[1], 0, entry[2])
+                    try {
+                        this_class.__gateway.send(entry[0], entry[1], 2, entry[2])
+                    } catch(e) {
+                        this.__module.log_error("Unable to publish to topic "+topic+": "+get_exception(e))
+                    }
                 }
                 this_class.__queue = []
             }
         }
         
-        // connect to the gateway
+        // what to do on failure
         var __on_failure = function() {
             this_class.__module.log_error("Unable to connect to "+this_class.__module.gateway_hostname+":"+this_class.__module.gateway_port)
         }
+        
+        // connect to the gateway
         try {
             this.__module.log_debug("Connecting to "+this.__module.gateway_hostname+":"+this.__module.gateway_port+" (ssl="+this.__module.gateway_ssl+")")
             var connect_options = {
@@ -59,7 +64,11 @@ class Mqtt_client {
     // subscribe to a given topic
     __subscribe(topic) {
         this.__module.log_debug("Subscribing topic "+topic)
-        this.__gateway.subscribe(topic, {"qos": 2})
+        try {
+            this.__gateway.subscribe(topic, {"qos": 2})
+        } catch(e) {
+            this.__module.log_error("Unable to subscribe to topic "+topic+": "+get_exception(e))
+        }
     }
     
     // Build the full topic (e.g. egeoffrey/v1/<house_id>/<from_module>/<to_module>/<command>/<args>)
@@ -78,7 +87,13 @@ class Mqtt_client {
             payload = buffer
         }
         var topic = this.__build_topic(house_id, this.__module.fullname, to_module, command, args)
-        if (this.__module.connected) this.__gateway.send(topic, payload, 2, retain=retain)
+        if (this.__module.connected) {
+            try {
+                this.__gateway.send(topic, payload, 2, retain=retain)
+            } catch(e) {
+                this.__module.log_error("Unable to publish to topic "+topic+": "+get_exception(e))
+            }
+        }
         else this.__queue.push([topic, payload, retain])
     }
     
@@ -86,7 +101,11 @@ class Mqtt_client {
     unsubscribe(topic) {
         this.__module.log_debug("Unsubscribing from "+topic)
         this.__topics_subscribed.remove(topic)
-        this.__gateway.unsubscribe(topic)
+        try {
+            this.__gateway.unsubscribe(topic)
+        } catch(e) {
+            this.__module.log_error("Unable to unsubscribe to topic "+topic+": "+get_exception(e))
+        }
     }
     
     // connect to the MQTT broker and subscribed to the requested topics
