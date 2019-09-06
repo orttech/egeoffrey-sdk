@@ -1,7 +1,12 @@
+import datetime
+
 from sdk.python.module.module import Module
 from sdk.python.module.helpers.cache import Cache
 from sdk.python.module.helpers.scheduler import Scheduler
 from sdk.python.module.helpers.message import Message
+
+import sdk.python.utils.numbers
+import sdk.python.utils.exceptions as exception
 
 # service common functionalities
 class Service(Module):
@@ -35,7 +40,10 @@ class Service(Module):
     def __remove_schedule(self, sensor_id):
         # if already scheduled, stop it
         if sensor_id in self.__jobs:
-            self.__scheduler.remove_job(self.__jobs[sensor_id])
+            try:
+                self.__scheduler.remove_job(self.__jobs[sensor_id])
+            except Exception,e: 
+                self.log_error("Unable to remove scheduled job for sensor "+sensor_id+": "+exception.get(e))
         
     # schedule a job for polling a sensor
     def __add_schedule(self, sensor_id, schedule, configuration):
@@ -43,13 +51,23 @@ class Service(Module):
         self.__remove_schedule(sensor_id)
         # "schedule" contains apscheduler settings for this sensor
         job = schedule
+        # add extra-delay picked randomly in a [-10,+20] seconds window
+        job["jitter"] = 10
         # add function to call and args
         job["func"] = self.__poll_sensor
         job["args"] = [sensor_id, configuration]
         # schedule the job for execution
-        self.__jobs[sensor_id] = self.__scheduler.add_job(job).id
+        try:
+            self.__jobs[sensor_id] = self.__scheduler.add_job(job).id
+        except Exception,e: 
+            self.log_error("Unable to scheduled job for sensor "+sensor_id+": "+exception.get(e))
         # run the job immediately
-        self.__poll_sensor(sensor_id, configuration)
+        poll_now_job = {}
+        poll_now_job["trigger"] = "date"
+        poll_now_job["run_date"] = datetime.datetime.now() + datetime.timedelta(seconds=sdk.python.utils.numbers.randint(5,20))
+        poll_now_job["func"] = self.__poll_sensor
+        poll_now_job["args"] = [sensor_id, configuration]
+        self.__scheduler.add_job(poll_now_job)
 
     # register an pull/push sensor
     def register_sensor(self, message, validate=[]):
