@@ -15,5 +15,5 @@ RUN pip install paho-mqtt requests tinynumpy pyyaml yq apscheduler
 COPY . $WORKDIR
 
 ### define entrypoint
-ENTRYPOINT ["bash", "docker/docker-entrypoint.sh"]
+ENTRYPOINT ["bash", "docker-entrypoint.sh"]
 CMD ["egeoffrey"]

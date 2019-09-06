@@ -14,7 +14,7 @@ class DateTimeUtils():
     def timezone(self, timestamp):
         return int(timestamp+self.__utc_offset*3600)
 
-    # return an UTC timestamp from a local timezone timestamp
+    # return an UTC timestamp from a given timestamp (in the local timezone)
     def utc(self, timestamp):
         return int(timestamp-self.__utc_offset*3600)
         
@@ -22,39 +22,39 @@ class DateTimeUtils():
     def now(self):
         return self.timezone(int(time.time()))
 
-    # return yesterday's timestamp (in the local timezone)
+    # return yesterday's timestamp from a given timestamp (in the local timezone)
     def yesterday(self):
         return self.now()-24*3600
 
-    # return the last hour timestamp (in the local timezone)
+    # return the last hour timestamp from a given timestamp (in the local timezone)
     def last_hour(self):
         return self.now()-60*60
         
-    # generate a given timestamp based on the input
+    # generate a UTC timestamp based on the input
     def get_timestamp(self, years, months, days, hours, minutes, seconds):
         date = datetime.datetime(years, months, days, hours, minutes, seconds, 0)
         return int((date - datetime.datetime(1970, 1, 1)).total_seconds())
 
-    # return day start timestamp
+    # return day start timestamp from a given timestamp (in the local timezone)
     def day_start(self, timestamp):
         date = datetime.datetime.utcfromtimestamp(timestamp)
         return self.get_timestamp(date.year, date.month, date.day, 0, 0, 0)
         
-    # return day end timestamp
+    # return day end timestamp from a given timestamp (in the local timezone)
     def day_end(self, timestamp):
         date = datetime.datetime.utcfromtimestamp(timestamp)
         return self.get_timestamp(date.year, date.month, date.day, 23, 59, 59)
 
-    # return hour start timestamp
+    # return hour start timestamp from a given timestamp (in the local timezone)
     def hour_start(self, timestamp):
         date = datetime.datetime.utcfromtimestamp(timestamp)
         return self.get_timestamp(date.year, date.month, date.day, date.hour, 0, 0)
 
-    # return hour end timestamp
+    # return hour end timestamp from a given timestamp (in the local timezone)
     def hour_end(self, timestamp):
         date = datetime.datetime.utcfromtimestamp(timestamp)
         return self.get_timestamp(date.year, date.month, date.day, date.hour, 59, 59)
         
-    # return a timestamp as a human readable format
+    # take a timestamp (in the local timezone) and return it in a human-readable format
     def timestamp2date(self, timestamp):
-        return datetime.datetime.utcfromtimestamp(self.utc(int(timestamp))).strftime('%Y-%m-%d %H:%M:%S')
+        return datetime.datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
