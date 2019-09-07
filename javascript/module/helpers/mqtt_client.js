@@ -11,7 +11,9 @@ class Mqtt_client {
         this.__topics_subscribed = []
         this.__topics_to_wait = []
         // queue messages while offline
-        this.__queue = []
+        this.__publish_queue = []
+        // queue configuration messages while not configured
+        this.__configuration_queue = []
     }
 
     // connect to the MQTT broker
@@ -27,15 +29,15 @@ class Mqtt_client {
                 this_class.__topics_subscribed.push(topic)
             }
             // there are message in the queue, send them
-            if (this_class.__queue.length > 0) { 
-                for (var entry of this_class.__queue) {
+            if (this_class.__publish_queue.length > 0) { 
+                for (var entry of this_class.__publish_queue) {
                     try {
                         this_class.__gateway.send(entry[0], entry[1], 2, entry[2])
                     } catch(e) {
                         this.__module.log_error("Unable to publish to topic "+topic+": "+get_exception(e))
                     }
                 }
-                this_class.__queue = []
+                this_class.__publish_queue = []
             }
         }
         
@@ -94,7 +96,7 @@ class Mqtt_client {
                 this.__module.log_error("Unable to publish to topic "+topic+": "+get_exception(e))
             }
         }
-        else this.__queue.push([topic, payload, retain])
+        else this.__publish_queue.push([topic, payload, retain])
     }
     
     // unsubscribe from a topic
@@ -157,6 +159,7 @@ class Mqtt_client {
                                 return
                             }
                             // check if we had to wait for this to start the module
+                            var configuration_consumed = false
                             if (this_class.__topics_to_wait.length > 0) {
                                 for (var req_pattern of this_class.__topics_to_wait) {
                                     if (topic_matches_sub(req_pattern, message.topic)) {
@@ -167,6 +170,18 @@ class Mqtt_client {
                                         if (this_class.__topics_to_wait.length == 0) { 
                                             this_class.__module.log_debug("Configuration completed for "+this_class.__module.fullname+", starting the module...")
                                             this_class.__module.configured = true
+                                            // now that is configured, if there are configuration messages waiting in the queue, deliver them
+                                            if (this_class.__configuration_queue.length > 0) { 
+                                                for (var queued_message of this_class.__configuration_queue) {
+                                                    try {
+                                                        this_class.__module.on_configuration(queued_message)
+                                                    } catch(e) {
+                                                        this_class.__module.log_error("runtime error during on_configuration() - "+message.dump()+": "+get_exception(e))
+                                                    }
+                                                }
+                                                this_class.__configuration_queue = []
+                                            }
+                                            // now that is configured, start the module
                                             try { 
                                                 this_class.__module.on_start()
                                             } catch(e) {
@@ -177,6 +192,10 @@ class Mqtt_client {
                                         }
                                     }
                                 }
+                            }
+                            // if this message was not consumed and the module is still unconfigured, queue it, will be delivered once configured
+                            if (! configuration_consumed && ! this_class.__module.configured) {
+                                this_class.__configuration_queue.push(message)
                             }
                         // handle internal messages
                         } else if (message.command == "PING") {

@@ -20,7 +20,9 @@ class Mqtt_client():
         self.__topics_subscribed = []
         self.__topics_to_wait = []
         # queue messages while offline
-        self.__queue = Queue.Queue(50)
+        self.__publish_queue = Queue.Queue(50)
+        # queue configuration messages while not configured
+        self.__configuration_queue = Queue.Queue(30)
         
     # connect to the MQTT broker
     def __connect(self):
@@ -41,7 +43,7 @@ class Mqtt_client():
                 self.__module.connected = True
                 # TODO: last will? e.g. log a disconnecting message
             except Exception,e:
-                self.__module.log_error("Unable to connect to "+self.__module.gateway_hostname+":"+str(self.__module.gateway_port)+" - "+exception.get(e))
+                self.__module.log_warning("Unable to connect to "+self.__module.gateway_hostname+":"+str(self.__module.gateway_port)+" - "+exception.get(e))
                 self.__module.sleep(10)
 
     # subscribe to a given topic
@@ -67,7 +69,7 @@ class Mqtt_client():
             info = self.__gateway.publish(topic, payload, retain=retain, qos=2)
         # queue the message if offline
         else:
-            self.__queue.put([topic, payload, retain])
+            self.__publish_queue.put([topic, payload, retain])
             
     # unsubscribe from a topic
     def unsubscribe(self, topic):
@@ -95,9 +97,9 @@ class Mqtt_client():
                         self.__subscribe(topic)
                         self.__topics_subscribed.append(topic)
                     # if there are message in the queue, send them
-                    if self.__queue.qsize() > 0: 
-                        while not self.__queue.empty():
-                            entry = self.__queue.get()
+                    if self.__publish_queue.qsize() > 0: 
+                        while not self.__publish_queue.empty():
+                            entry = self.__publish_queue.get()
                             self.__gateway.publish(entry[0], entry[1], retain=entry[2], qos=2)
                 else:
                     # unable to connect, retry
@@ -128,28 +130,41 @@ class Mqtt_client():
                     if mqtt.topic_matches_sub(pattern, message.topic):
                         # if the message is a configuration
                         if message.sender == "controller/config" and message.command == "CONF":
+                            # TODO: this is all executed by mqtt network thread so it is blocking. Move it
                             # notify the module about the configuration just received
                             try:
-                                # TODO: this is all executed by mqtt network thread so it is blocking. Move it
                                 is_valid_configuration = self.__module.on_configuration(message)
                             except Exception,e: 
                                 self.__module.log_error("runtime error during on_configuration() - "+message.dump()+": "+exception.get(e))
                                 return
-                            # if the configuration has not been accepted by the module, ignore it
+                            # if the configuration has not been accepted by the module (returned False), ignore it
                             if is_valid_configuration is not None and not is_valid_configuration: return
                             # check if we had to wait for this message to start the module
+                            configuration_consumed = False
                             if len(self.__topics_to_wait) > 0:
                                 for req_pattern in self.__topics_to_wait:
                                     if mqtt.topic_matches_sub(req_pattern, message.topic):
                                         self.__module.log_debug("received configuration "+message.topic)
+                                        configuration_consumed = True
                                         self.__topics_to_wait.remove(req_pattern)
                                         # if there are no more topics to wait for, this service is now configured
                                         if len(self.__topics_to_wait) == 0: 
                                             self.__module.log_info("Configuration completed")
-                                            # set the configured flag to true, this will cause the service to start
+                                            # set the configured flag to true, this will cause the service to start (on_start() is in the main thread)
                                             self.__module.configured = True
+                                            # now that is configured, if there are configuration messages waiting in the queue, deliver them
+                                            if self.__configuration_queue.qsize() > 0: 
+                                                while not self.__configuration_queue.empty():
+                                                    queued_message = self.queue.get()
+                                                    try:
+                                                        self.__module.on_configuration(queued_message)
+                                                    except Exception,e: 
+                                                        self.__module.log_error("runtime error during on_configuration() - "+queued_message.dump()+": "+exception.get(e))
                                         else:
                                             self.__module.log_debug("still waiting for configuration on "+str(self.__topics_to_wait))
+                            # if this message was not consumed and the module is still unconfigured, queue it, will be delivered once configured
+                            if not configuration_consumed and not self.__module.configured:
+                                self.__configuration_queue.put(message)
                         # handle internal messages
                         elif message.command == "PING":
                             message.reply()
