@@ -305,6 +305,7 @@ class Watchdog(Module):
             # for each managed module
             for module in self.modules:
                 # if requested a specific module, skip the others
+                if module["fullname"] not in self.threads: continue
                 if message.args != "*" and module["fullname"] != message.args: continue
                 module["debug"] = self.threads[module["fullname"]].debug
                 module["version"] = self.threads[module["fullname"]].version

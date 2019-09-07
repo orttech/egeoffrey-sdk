@@ -88,7 +88,7 @@ class Service(Module):
         # in push mode the sensor will unsolicited generate new measures
         elif service["mode"] == "push":
             if not self.is_valid_configuration(validate, service["configuration"]): return
-            self.log_info("registered push sensor "+sensor_id+" with configuration "+str(service["configuration"]))
+            self.log_debug("registered push sensor "+sensor_id+" with configuration "+str(service["configuration"]))
         # keep track of the sensor's configuration
         self.sensors[sensor_id] = service["configuration"]
         return sensor_id
