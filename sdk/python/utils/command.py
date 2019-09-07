@@ -7,6 +7,7 @@ import Queue
 import os
 import threading
 import subprocess
+import signal
 
 # helper class for running a command in a separate thread with a timeout
 class CommandWrapper(object):
