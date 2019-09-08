@@ -24,8 +24,6 @@ class Notification(Module):
         # queue notifications
         self.__queue = Queue.Queue(10)
         self.__playing = False
-        # request required configuration files
-        self.add_configuration_listener(self.fullname, True)
         self.add_broadcast_listener("controller/alerter", "NOTIFY", "#")
     
     # filter notification

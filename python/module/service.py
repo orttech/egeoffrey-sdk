@@ -51,8 +51,8 @@ class Service(Module):
         self.__remove_schedule(sensor_id)
         # "schedule" contains apscheduler settings for this sensor
         job = schedule
-        # add extra-delay picked randomly in a [-10,+20] seconds window
-        job["jitter"] = 10
+        # add extra-delay picked randomly in a [-15,+15] seconds window
+        job["jitter"] = 15
         # add function to call and args
         job["func"] = self.__poll_sensor
         job["args"] = [sensor_id, configuration]
@@ -61,13 +61,14 @@ class Service(Module):
             self.__jobs[sensor_id] = self.__scheduler.add_job(job).id
         except Exception,e: 
             self.log_error("Unable to scheduled job for sensor "+sensor_id+": "+exception.get(e))
-        # run the job immediately
-        poll_now_job = {}
-        poll_now_job["trigger"] = "date"
-        poll_now_job["run_date"] = datetime.datetime.now() + datetime.timedelta(seconds=sdk.python.utils.numbers.randint(5,20))
-        poll_now_job["func"] = self.__poll_sensor
-        poll_now_job["args"] = [sensor_id, configuration]
-        self.__scheduler.add_job(poll_now_job)
+        # if schedule trigger is interval, run also the job immediately
+        if schedule["trigger"] == "interval":
+            poll_now_job = {}
+            poll_now_job["trigger"] = "date"
+            poll_now_job["run_date"] = datetime.datetime.now() + datetime.timedelta(seconds=sdk.python.utils.numbers.randint(5,20))
+            poll_now_job["func"] = self.__poll_sensor
+            poll_now_job["args"] = [sensor_id, configuration]
+            self.__scheduler.add_job(poll_now_job)
 
     # register an pull/push sensor
     def register_sensor(self, message, validate=[]):
