@@ -1,5 +1,5 @@
 import time
-import Queue
+import collections
 from abc import ABCMeta, abstractmethod
 
 from sdk.python.module.module import Module
@@ -22,7 +22,7 @@ class Notification(Module):
         # keep track of the current hour
         self.__current_hour = None
         # queue notifications
-        self.__queue = Queue.Queue(10)
+        self.__queue = collections.deque(maxlen=10)
         self.__playing = False
         self.add_broadcast_listener("controller/alerter", "NOTIFY", "#")
     
@@ -75,7 +75,7 @@ class Notification(Module):
         # another notification is already in progress, queue it
         if self.__playing:
             self.log_debug("queuing notification about "+text)
-            self.__queue.put([severity, text])
+            self.__queue.append([severity, text])
         # play the notification
         else:
             self.__playing = True
@@ -85,10 +85,12 @@ class Notification(Module):
                 self.log_error("unable to notify: "+exception.get(e))
             self.__playing = False
             # if there is a notification in the queue, spool it
-            if self.__queue.qsize() > 0:
-                entry = self.__queue.get()
-                self.__notify(entry[0], entry[1])
-                
+            while True:
+                try:
+                    entry = self.queue.popleft()
+                    self.__notify(entry[0], entry[1])
+                except IndexError:
+                    break
 
     # What to do when receiving a request for this module
     def on_message(self, message):
