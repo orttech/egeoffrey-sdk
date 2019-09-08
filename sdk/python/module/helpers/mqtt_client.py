@@ -155,7 +155,7 @@ class Mqtt_client():
                                             # now that is configured, if there are configuration messages waiting in the queue, deliver them
                                             if self.__configuration_queue.qsize() > 0: 
                                                 while not self.__configuration_queue.empty():
-                                                    queued_message = self.queue.get()
+                                                    queued_message = self.__configuration_queue.get()
                                                     try:
                                                         self.__module.on_configuration(queued_message)
                                                     except Exception,e: 
