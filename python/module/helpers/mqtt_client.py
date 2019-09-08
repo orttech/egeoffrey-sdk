@@ -1,5 +1,5 @@
 import os
-import Queue
+import collections
 import time
 import json
 import paho.mqtt.client as mqtt
@@ -20,9 +20,9 @@ class Mqtt_client():
         self.__topics_subscribed = []
         self.__topics_to_wait = []
         # queue messages while offline
-        self.__publish_queue = Queue.Queue(50)
+        self.__publish_queue = collections.deque(maxlen=300)
         # queue configuration messages while not configured
-        self.__configuration_queue = Queue.Queue(30)
+        self.__configuration_queue = collections.deque(maxlen=500)
         
     # connect to the MQTT broker
     def __connect(self):
@@ -69,7 +69,7 @@ class Mqtt_client():
             info = self.__gateway.publish(topic, payload, retain=retain, qos=2)
         # queue the message if offline
         else:
-            self.__publish_queue.put([topic, payload, retain])
+            self.__publish_queue.append([topic, payload, retain])
             
     # unsubscribe from a topic
     def unsubscribe(self, topic):
@@ -97,10 +97,12 @@ class Mqtt_client():
                         self.__subscribe(topic)
                         self.__topics_subscribed.append(topic)
                     # if there are message in the queue, send them
-                    if self.__publish_queue.qsize() > 0: 
-                        while not self.__publish_queue.empty():
-                            entry = self.__publish_queue.get()
+                    while True:
+                        try:
+                            entry = self.__publish_queue.popleft()
                             self.__gateway.publish(entry[0], entry[1], retain=entry[2], qos=2)
+                        except IndexError:
+                            break
                 else:
                     # unable to connect, retry
                     self.__module.log_error("Cannot connect: " + mqtt.connack_string(rc))
@@ -153,18 +155,20 @@ class Mqtt_client():
                                             # set the configured flag to true, this will cause the service to start (on_start() is in the main thread)
                                             self.__module.configured = True
                                             # now that is configured, if there are configuration messages waiting in the queue, deliver them
-                                            if self.__configuration_queue.qsize() > 0: 
-                                                while not self.__configuration_queue.empty():
-                                                    queued_message = self.__configuration_queue.get()
+                                            while True:
+                                                try:
+                                                    queued_message = self.__configuration_queue.popleft()
                                                     try:
                                                         self.__module.on_configuration(queued_message)
                                                     except Exception,e: 
                                                         self.__module.log_error("runtime error during on_configuration() - "+queued_message.dump()+": "+exception.get(e))
+                                                except IndexError:
+                                                    break
                                         else:
                                             self.__module.log_debug("still waiting for configuration on "+str(self.__topics_to_wait))
                             # if this message was not consumed and the module is still unconfigured, queue it, will be delivered once configured
                             if not configuration_consumed and not self.__module.configured:
-                                self.__configuration_queue.put(message)
+                                self.__configuration_queue.append(message)
                         # handle internal messages
                         elif message.command == "PING":
                             message.reply()
