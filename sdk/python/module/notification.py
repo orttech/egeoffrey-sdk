@@ -87,7 +87,7 @@ class Notification(Module):
             # if there is a notification in the queue, spool it
             while True:
                 try:
-                    entry = self.queue.popleft()
+                    entry = self.__queue.popleft()
                     self.__notify(entry[0], entry[1])
                 except IndexError:
                     break
