@@ -3,6 +3,10 @@
 # OS:
 # Python: 
 
+import sys
+reload(sys)  
+sys.setdefaultencoding('utf8')
+
 import threading
 import os
 import time
