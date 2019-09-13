@@ -7,9 +7,9 @@ import sys
 reload(sys)  
 sys.setdefaultencoding('utf8')
 
-import threading
 import os
 import time
+import threading
 from abc import ABCMeta, abstractmethod
 
 from sdk.python.module.helpers.message import Message
