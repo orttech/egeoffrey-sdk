@@ -1,8 +1,8 @@
 manifest_schema: 2
 package: egeoffrey-sdk
-revision: 31
+revision: 32
 version: 1.0
-branch: development
+branch: master
 github: egeoffrey/egeoffrey-sdk
 dockerhub: egeoffrey/egeoffrey-sdk
 description: 
