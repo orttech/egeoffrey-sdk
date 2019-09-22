@@ -1,10 +1,10 @@
-manifest_schema: 2
-package: egeoffrey-sdk
-revision: 32
-version: 1.0
 branch: master
-github: egeoffrey/egeoffrey-sdk
+description: null
 dockerhub: egeoffrey/egeoffrey-sdk
-description: 
-tags: 
+github: egeoffrey/egeoffrey-sdk
+manifest_schema: 2
 modules: []
+package: egeoffrey-sdk
+revision: 33
+tags: null
+version: 1.0
