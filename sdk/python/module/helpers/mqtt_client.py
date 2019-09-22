@@ -141,7 +141,13 @@ class Mqtt_client():
                 queue_size = self.consumer_queue.qsize()
                 # print a warning if the incoming queue is getting too big
                 if queue_size > 100:
-                    self.module.log_warning("Incoming message queue size: "+str(queue_size))
+                    self.module.log_warning("the incoming message queue is getting too big ("+str(queue_size)+" messages)")
+                # if really too big, there is something wrong happening, ask the watchdog to restart our module
+                if queue_size > 500 and self.module.watchdog is not None:
+                    self.module.log_error("the incoming message queue is too big, requesting our watchdog to restart the module")
+                    self.module.watchdog.restart_module(self.module.fullname)
+                    return
+                # queue the message
                 self.consumer_queue.put_nowait(message)
             except Exception,e:
                 self.module.log_error("Unable to queue incoming message: "+exception.get(e))
