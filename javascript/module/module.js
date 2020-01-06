@@ -90,7 +90,7 @@ class Module {
         if (this.logging_local) console.log(format_log_line(severity, this.fullname, text))
         if (this.logging_remote && allow_remote_logging) {
             // send the message to the logger module
-            message = Message(this)
+            var message = new Message(this)
             message.recipient = "controller/logger"
             message.command = "LOG"
             message.args = severity
