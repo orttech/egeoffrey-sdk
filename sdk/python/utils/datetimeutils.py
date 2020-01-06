@@ -8,7 +8,11 @@ import time
 
 class DateTimeUtils():
     def __init__(self, utc_offset):
-        self.__utc_offset = utc_offset
+        self.__utc_offset = 0
+        try:
+            self.__utc_offset = int(utc_offset)
+        except Exception,e: 
+            pass
         
     # return the timestamp with the timezone offset applied
     def timezone(self, timestamp):

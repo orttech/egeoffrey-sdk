@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from sdk.python.module.module import Module
 from sdk.python.module.helpers.cache import Cache
@@ -22,6 +23,8 @@ class Service(Module):
         self.__jobs = {}
         # map sensor_id with service's configuration
         self.sensors = {}
+        # for pull services, if polling at startup
+        self.poll_at_startup = bool(int(os.getenv("EGEOFFREY_POLL_SENSORS_AT_STARTUP", True)))
         # request all sensors' configuration so to filter sensors of interest
         self.add_configuration_listener("sensors/#", 1)
         
@@ -62,7 +65,7 @@ class Service(Module):
         except Exception,e: 
             self.log_error("Unable to scheduled job for sensor "+sensor_id+": "+exception.get(e))
         # if schedule trigger is interval, run also the job immediately
-        if schedule["trigger"] == "interval":
+        if schedule["trigger"] == "interval" and self.poll_at_startup:
             poll_now_job = {}
             poll_now_job["trigger"] = "date"
             poll_now_job["run_date"] = datetime.datetime.now() + datetime.timedelta(seconds=sdk.python.utils.numbers.randint(5,20))

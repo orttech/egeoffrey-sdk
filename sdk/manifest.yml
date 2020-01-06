@@ -5,6 +5,6 @@ github: egeoffrey/egeoffrey-sdk
 manifest_schema: 2
 modules: []
 package: egeoffrey-sdk
-revision: 33
+revision: 34
 tags: null
 version: 1.0
