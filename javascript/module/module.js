@@ -134,14 +134,14 @@ class Module {
     // upgrade a configuration file to the given version
     upgrade_config(filename, from_version, to_version, content) {
         // delete the old configuration file first
-        message = Message(self)
+        var message = new Message(this)
         message.recipient = "controller/config"
         message.command = "DELETE"
         message.args = filename
         message.config_schema = from_version
         this.send(message)
         // save the new version
-        message = Message(self)
+        var message = new Message(this)
         message.recipient = "controller/config"
         message.command = "SAVE"
         message.args = filename
